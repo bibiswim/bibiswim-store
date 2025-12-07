@@ -10,6 +10,11 @@ if (!customElements.get('media-gallery')) {
           thumbnails: this.querySelector('[id^="GalleryThumbnails"]'),
         };
         this.mql = window.matchMedia('(min-width: 750px)');
+
+        // Load variant images data from embedded JSON for instant switching
+        this.variantImageData = this.loadVariantImageData();
+        this.preloadVariantImages();
+
         if (!this.elements.thumbnails) return;
 
         this.elements.viewer.addEventListener('slideChanged', debounce(this.onSlideChanged.bind(this), 500));
@@ -19,35 +24,42 @@ if (!customElements.get('media-gallery')) {
             .addEventListener('click', this.setActiveMedia.bind(this, mediaToSwitch.dataset.target, false));
         });
         if (this.dataset.desktopLayout.includes('thumbnail') && this.mql.matches) this.removeListSemantic();
-
-        // Handle initial page load with variant param - select variant thumbnail if variant is in URL
-        this.handleInitialVariantSelection();
       }
 
-      handleInitialVariantSelection() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const variantId = urlParams.get('variant');
-
-        if (variantId) {
-          // Check if there's a variant thumbnail slot and select it
-          const variantThumbSlot = this.elements.thumbnails?.querySelector('[data-variant-thumbnail-slot="true"]');
-          if (variantThumbSlot) {
-            // Set the variant thumbnail as active
-            this.setActiveThumbnail(variantThumbSlot);
-
-            // Also set the variant media as active in the viewer
-            const variantMediaId = variantThumbSlot.dataset.target;
-            if (variantMediaId) {
-              const variantSlide = this.elements.viewer.querySelector(`[data-media-id="${variantMediaId}"]`);
-              if (variantSlide) {
-                this.elements.viewer.querySelectorAll('[data-media-id]').forEach((element) => {
-                  element.classList.remove('is-active');
-                });
-                variantSlide.classList.add('is-active');
-              }
-            }
+      // Load variant image data from embedded JSON script
+      loadVariantImageData() {
+        const sectionId = this.id.replace('MediaGallery-', '');
+        const dataScript = document.getElementById(`VariantImageData-${sectionId}`);
+        if (dataScript) {
+          try {
+            return JSON.parse(dataScript.textContent);
+          } catch (e) {
+            console.warn('Failed to parse variant image data:', e);
           }
         }
+        return null;
+      }
+
+      // Preload all variant images for instant display
+      preloadVariantImages() {
+        if (!this.variantImageData?.variants) return;
+
+        Object.values(this.variantImageData.variants).forEach((variant) => {
+          if (variant.imageSrc) {
+            const img = new Image();
+            img.src = variant.imageSrc;
+            // Also preload thumbnail
+            if (variant.thumbSrc) {
+              const thumb = new Image();
+              thumb.src = variant.thumbSrc;
+            }
+          }
+        });
+      }
+
+      // Get variant image data by variant ID (instant, no API call needed)
+      getVariantImageData(variantId) {
+        return this.variantImageData?.variants?.[variantId] || null;
       }
 
       onSlideChanged(event) {

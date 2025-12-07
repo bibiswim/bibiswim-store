@@ -1844,3 +1844,34 @@ a.product__text {
   width: 100%;
   max-width: 100%;
 }
+
+/* ==============================================
+   Mobile Product Gallery Customizations
+   ============================================== */
+
+@media screen and (max-width: 749px) {
+  /* Hide thumbnail navigation buttons on mobile for seamless scrolling */
+  .product-gallery-thumbnails .thumbnail-nav-btn {
+    display: none !important;
+  }
+
+  /* Allow thumbnails to show more items in one line */
+  .product-gallery-thumbnails .thumbnail-list {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.8rem;
+    padding: 0 1rem;
+    scroll-padding-left: 1rem;
+  }
+
+  /* Make thumbnails smaller on mobile to fit more */
+  .product-gallery-thumbnails .thumbnail-list__item {
+    flex: 0 0 auto;
+    width: calc(28% - 0.6rem);
+  }
+
+  .product-gallery-thumbnails .thumbnail {
+    width: 100%;
+    aspect-ratio: 1;
+  }
+}

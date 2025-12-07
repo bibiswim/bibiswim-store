@@ -62,7 +62,41 @@
     Get main product image (first non-variant image, or just the first image)
   endcomment
   assign main_product_media = product.media.first
+  
+  comment
+    Determine which image should be active on initial load
+    If variant is selected and has different featured media, that should be active
+  endcomment
+  assign initial_active_is_variant = false
+  if current_variant_media != null and current_variant_media.id != main_product_media.id
+    assign initial_active_is_variant = true
+  endif
 -%}
+
+{%- comment -%} Preload all variant images for faster switching {%- endcomment -%}
+{%- for variant in product.variants -%}
+  {%- if variant.featured_media != null -%}
+    <link rel="preload" as="image" href="{{ variant.featured_media | image_url: width: 1200 }}" fetchpriority="low">
+  {%- endif -%}
+{%- endfor -%}
+
+{%- comment -%} Store variant image data as JSON for instant client-side switching {%- endcomment -%}
+<script type="application/json" id="VariantImageData-{{ section.id }}">
+  {
+    "sectionId": "{{ section.id }}",
+    "variants": {
+      {%- for variant in product.variants -%}
+        "{{ variant.id }}": {
+          "id": {{ variant.id }},
+          "mediaId": {% if variant.featured_media %}{{ variant.featured_media.id }}{% else %}null{% endif %},
+          "imageSrc": {% if variant.featured_media %}"{{ variant.featured_media | image_url: width: 1200 }}"{% else %}null{% endif %},
+          "thumbSrc": {% if variant.featured_media %}"{{ variant.featured_media | image_url: width: 416 }}"{% else %}null{% endif %},
+          "alt": {% if variant.featured_media %}"{{ variant.featured_media.alt | escape }}"{% else %}""{% endif %}
+        }{% unless forloop.last %},{% endunless %}
+      {%- endfor -%}
+    }
+  }
+</script>
 
 <media-gallery
   id="MediaGallery-{{ section.id }}"
@@ -74,7 +108,7 @@
   data-desktop-layout="{{ section.settings.gallery_layout }}"
 >
   <div id="GalleryStatus-{{ section.id }}" class="visually-hidden" role="status"></div>
-  <slider-component id="GalleryViewer-{{ section.id }}" class="slider-mobile-gutter">
+  <slider-component id="GalleryViewer-{{ section.id }}" class="slider-mobile-gutter product-gallery-viewer">
     <a class="skip-to-content-link button visually-hidden quick-add-hidden" href="#ProductInfo-{{ section.id }}">
       {{ 'accessibility.skip_to_product_info' | t }}
     </a>
@@ -87,7 +121,7 @@
       {%- if main_product_media -%}
         <li
           id="Slide-{{ section.id }}-{{ main_product_media.id }}"
-          class="product__media-item grid__item slider__slide is-active{% if single_media_visible %} product__media-item--single{% endif %}{% if main_product_media.media_type != 'image' %} product__media-item--full{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}"
+          class="product__media-item grid__item slider__slide{% unless initial_active_is_variant %} is-active{% endunless %}{% if single_media_visible %} product__media-item--single{% endif %}{% if main_product_media.media_type != 'image' %} product__media-item--full{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}"
           data-media-id="{{ section.id }}-{{ main_product_media.id }}"
         >
           {%- assign media_position = 1 -%}
@@ -112,7 +146,7 @@
       {%- if current_variant_media != null and current_variant_media.id != main_product_media.id -%}
         <li
           id="Slide-{{ section.id }}-{{ current_variant_media.id }}"
-          class="product__media-item grid__item slider__slide variant-media-slot{% if single_media_visible %} product__media-item--single{% endif %}{% if current_variant_media.media_type != 'image' %} product__media-item--full{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}"
+          class="product__media-item grid__item slider__slide variant-media-slot{% if initial_active_is_variant %} is-active{% endif %}{% if single_media_visible %} product__media-item--single{% endif %}{% if current_variant_media.media_type != 'image' %} product__media-item--full{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--fade-in{% endif %}"
           data-media-id="{{ section.id }}-{{ current_variant_media.id }}"
           data-variant-media-slot="true"
         >
@@ -244,11 +278,11 @@
   -%}
     <slider-component
       id="GalleryThumbnails-{{ section.id }}"
-      class="thumbnail-slider slider-mobile-gutter quick-add-hidden{% unless section.settings.gallery_layout contains 'thumbnail' %} medium-hide large-up-hide{% endunless %}{% if section.settings.mobile_thumbnails != 'show' %} small-hide{% endif %}{% if media_count <= 3 %} thumbnail-slider--no-slide{% endif %}"
+      class="thumbnail-slider slider-mobile-gutter quick-add-hidden{% unless section.settings.gallery_layout contains 'thumbnail' %} medium-hide large-up-hide{% endunless %}{% if section.settings.mobile_thumbnails != 'show' %} small-hide{% endif %}{% if media_count <= 3 %} thumbnail-slider--no-slide{% endif %} product-gallery-thumbnails"
     >
       <button
         type="button"
-        class="slider-button slider-button--prev{% if media_count <= 3 %} small-hide{% endif %}{% if media_count <= 4 %} medium-hide large-up-hide{% endif %}"
+        class="slider-button slider-button--prev{% if media_count <= 3 %} small-hide{% endif %}{% if media_count <= 4 %} medium-hide large-up-hide{% endif %} thumbnail-nav-btn"
         name="previous"
         aria-label="{{ 'general.slider.previous_slide' | t }}"
         aria-controls="GalleryThumbnails-{{ section.id }}"
@@ -295,7 +329,7 @@
             <button
               class="thumbnail global-media-settings global-media-settings--no-shadow"
               aria-label="{%- if main_product_media.media_type == 'image' -%}{{ 'products.product.media.load_image' | t: index: media_index }}{%- elsif main_product_media.media_type == 'model' -%}{{ 'products.product.media.load_model' | t: index: media_index }}{%- elsif main_product_media.media_type == 'video' or main_product_media.media_type == 'external_video' -%}{{ 'products.product.media.load_video' | t: index: media_index }}{%- endif -%}"
-              aria-current="true"
+              {%- unless initial_active_is_variant -%}aria-current="true"{%- endunless -%}
               aria-controls="GalleryViewer-{{ section.id }}"
               aria-describedby="{{ thumbnail_id }}"
             >
@@ -341,6 +375,7 @@
             <button
               class="thumbnail global-media-settings global-media-settings--no-shadow"
               aria-label="{%- if current_variant_media.media_type == 'image' -%}{{ 'products.product.media.load_image' | t: index: media_index }}{%- elsif current_variant_media.media_type == 'model' -%}{{ 'products.product.media.load_model' | t: index: media_index }}{%- elsif current_variant_media.media_type == 'video' or current_variant_media.media_type == 'external_video' -%}{{ 'products.product.media.load_video' | t: index: media_index }}{%- endif -%}"
+              {%- if initial_active_is_variant -%}aria-current="true"{%- endif -%}
               aria-controls="GalleryViewer-{{ section.id }}"
               aria-describedby="{{ thumbnail_id }}"
             >
@@ -439,7 +474,7 @@
       </ul>
       <button
         type="button"
-        class="slider-button slider-button--next{% if media_count <= 3 %} small-hide{% endif %}{% if media_count <= 4 %} medium-hide large-up-hide{% endif %}"
+        class="slider-button slider-button--next{% if media_count <= 3 %} small-hide{% endif %}{% if media_count <= 4 %} medium-hide large-up-hide{% endif %} thumbnail-nav-btn"
         name="next"
         aria-label="{{ 'general.slider.next_slide' | t }}"
         aria-controls="GalleryThumbnails-{{ section.id }}"

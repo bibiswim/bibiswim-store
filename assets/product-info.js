@@ -175,7 +175,8 @@ if (!customElements.get('product-info')) {
             return;
           }
 
-          this.updateMedia(html, variant?.featured_media?.id);
+          // Try to use cached variant image data for instant update
+          this.updateMediaWithCache(variant);
 
           const updateSourceFromDestination = (id, shouldHide = (source) => false) => {
             const source = html.getElementById(`${id}-${this.sectionId}`);
@@ -237,6 +238,30 @@ if (!customElements.get('product-info')) {
           .map((id) => `#${id}-${this.dataset.section}`)
           .join(', ');
         document.querySelectorAll(selectors).forEach(({ classList }) => classList.add('hidden'));
+      }
+
+      // Use cached variant image data for instant media updates (no API wait)
+      updateMediaWithCache(variant) {
+        if (!variant?.id) return;
+
+        const mediaGallery = this.querySelector('media-gallery');
+        if (!mediaGallery) return;
+
+        // Try to get variant image data from cache
+        const variantData = mediaGallery.getVariantImageData?.(variant.id);
+
+        if (variantData && variantData.mediaId) {
+          const sectionId = this.dataset.section;
+
+          // Update the variant slot using cached data (instant, no network needed)
+          if (mediaGallery.updateVariantSlot) {
+            mediaGallery.updateVariantSlot(sectionId, variantData.mediaId, variantData.imageSrc, variantData.alt);
+          }
+
+          // Set the variant slot as active
+          const variantMediaId = `${sectionId}-${variantData.mediaId}`;
+          mediaGallery.setActiveMedia?.(variantMediaId, false);
+        }
       }
 
       updateMedia(html, variantFeaturedMediaId) {
