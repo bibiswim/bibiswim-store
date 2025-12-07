@@ -1296,8 +1296,8 @@ a.product__text {
   align-items: center;
   justify-content: center;
   padding: 60px 20px 120px;
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
+  touch-action: none;
 }
 
 .product-lightbox__image-wrapper {
@@ -1309,6 +1309,7 @@ a.product__text {
   overflow: visible;
   cursor: zoom-in;
   position: relative;
+  touch-action: none;
 }
 
 .product-lightbox__image {
@@ -1317,10 +1318,12 @@ a.product__text {
   width: auto;
   height: auto;
   object-fit: contain;
-  transition: opacity 0.3s ease, transform 0.2s ease;
+  transition: opacity 0.3s ease;
   transform-origin: center center;
   user-select: none;
   -webkit-user-drag: none;
+  will-change: transform;
+  touch-action: none;
 }
 
 .product-lightbox__counter {

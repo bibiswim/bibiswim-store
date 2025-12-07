@@ -7,16 +7,22 @@ class ProductLightbox {
     this.currentIndex = 0;
     this.images = [];
     this.isZoomed = false;
-    this.startX = 0;
-    this.startY = 0;
     this.scale = 1;
-    this.initialDistance = 0;
-    this.touchStartTime = 0;
+    this.minScale = 1;
+    this.maxScale = 3;
+
+    // Pan/translate state
     this.translateX = 0;
     this.translateY = 0;
+
+    // Touch/mouse tracking
+    this.initialDistance = 0;
+    this.touchStartTime = 0;
     this.isPanning = false;
     this.panStartX = 0;
     this.panStartY = 0;
+    this.lastPanX = 0;
+    this.lastPanY = 0;
 
     this.init();
   }
@@ -75,27 +81,22 @@ class ProductLightbox {
     this.closeBtn.addEventListener('click', () => this.close());
     this.overlay.addEventListener('click', () => this.close());
 
-    // // Prevent scroll on lightbox container and image
-    // this.lightbox.addEventListener(
-    //   'wheel',
-    //   (e) => {
-    //     e.preventDefault();
-    //     e.stopPropagation();
-    //   },
-    //   { passive: false }
-    // );
-
-    // Prevent all touch scrolling on the lightbox to stop background page scroll
-    // But allow scrolling on container when zoomed
+    // Prevent background scroll when lightbox is open
     this.lightbox.addEventListener(
       'touchmove',
       (e) => {
-        // Allow scrolling inside container when image is zoomed
-        if (this.isZoomed && e.target.closest('.product-lightbox__container')) {
-          return;
-        }
+        // Always prevent default to stop background scroll
+        // We handle panning manually via transforms
         e.preventDefault();
-        e.stopPropagation();
+      },
+      { passive: false }
+    );
+
+    // Prevent wheel scroll on background
+    this.lightbox.addEventListener(
+      'wheel',
+      (e) => {
+        e.preventDefault();
       },
       { passive: false }
     );
@@ -118,12 +119,13 @@ class ProductLightbox {
       if (e.key === 'ArrowRight') this.next();
     });
 
-    // Touch/swipe events for mobile
+    // ============ TOUCH EVENTS ============
     let touchStartX = 0;
     let touchStartY = 0;
-    let touchEndX = 0;
-    let touchEndY = 0;
+    let lastTouchX = 0;
+    let lastTouchY = 0;
     let isSwiping = false;
+    let initialPinchScale = 1;
 
     this.container.addEventListener(
       'touchstart',
@@ -131,19 +133,22 @@ class ProductLightbox {
         if (e.touches.length === 2) {
           // Pinch zoom start
           this.initialDistance = this.getDistance(e.touches[0], e.touches[1]);
+          initialPinchScale = this.scale;
+          this.isPanning = false;
           return;
         }
 
         touchStartX = e.touches[0].clientX;
         touchStartY = e.touches[0].clientY;
+        lastTouchX = touchStartX;
+        lastTouchY = touchStartY;
         this.touchStartTime = Date.now();
 
         if (this.isZoomed) {
-          // Start panning when zoomed
+          // Start panning
           this.isPanning = true;
           this.panStartX = touchStartX - this.translateX;
           this.panStartY = touchStartY - this.translateY;
-          isSwiping = false;
         } else {
           isSwiping = true;
         }
@@ -157,20 +162,31 @@ class ProductLightbox {
         if (e.touches.length === 2) {
           // Pinch zoom
           const currentDistance = this.getDistance(e.touches[0], e.touches[1]);
-          const newScale = Math.max(1, Math.min(3, this.scale * (currentDistance / this.initialDistance)));
-          this.applyTransform(newScale, this.translateX, this.translateY);
-          this.isZoomed = newScale > 1;
+          const newScale = Math.max(
+            this.minScale,
+            Math.min(this.maxScale, initialPinchScale * (currentDistance / this.initialDistance))
+          );
+
+          // Calculate pinch center
+          const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+          const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+
+          this.zoomToPoint(newScale, centerX, centerY);
           return;
         }
 
-        if (this.isZoomed && this.isPanning) {
-          // Pan while zoomed
-          this.translateX = e.touches[0].clientX - this.panStartX;
-          this.translateY = e.touches[0].clientY - this.panStartY;
-          this.applyTransform(this.scale, this.translateX, this.translateY);
-        } else if (!this.isZoomed && isSwiping) {
-          touchEndX = e.touches[0].clientX;
-          touchEndY = e.touches[0].clientY;
+        const currentX = e.touches[0].clientX;
+        const currentY = e.touches[0].clientY;
+
+        if (this.isPanning && this.isZoomed) {
+          // Pan the zoomed image
+          this.translateX = currentX - this.panStartX;
+          this.translateY = currentY - this.panStartY;
+          this.constrainPan();
+          this.applyTransform();
+        } else if (isSwiping) {
+          lastTouchX = currentX;
+          lastTouchY = currentY;
         }
       },
       { passive: true }
@@ -181,72 +197,70 @@ class ProductLightbox {
       (e) => {
         if (e.touches.length > 0) return;
 
-        // Reset scale on pinch end
+        // Reset pinch state
         if (this.initialDistance > 0) {
-          const computedScale = this.scale;
           this.initialDistance = 0;
 
-          // If scale is close to 1, reset
-          if (computedScale < 1.1) {
+          // If scale is close to 1, reset completely
+          if (this.scale < 1.1) {
             this.resetZoom();
-          } else {
-            this.scale = computedScale;
-            this.isZoomed = true;
-            this.constrainPan();
           }
-          this.isPanning = false;
           return;
         }
 
-        // Reset panning state
-        if (this.isPanning) {
-          this.isPanning = false;
-          this.constrainPan();
-          return;
-        }
+        // Handle swipe for navigation (only when not zoomed)
+        if (isSwiping && !this.isZoomed) {
+          const touchDuration = Date.now() - this.touchStartTime;
+          const diffX = touchStartX - lastTouchX;
+          const threshold = 50;
 
-        // Handle swipe
-        if (!isSwiping || this.isZoomed) {
-          isSwiping = false;
-          return;
-        }
-
-        const touchDuration = Date.now() - this.touchStartTime;
-        const diffX = touchStartX - touchEndX;
-        const threshold = 50;
-
-        if (Math.abs(diffX) > threshold && touchDuration < 500) {
-          if (diffX > 0) {
-            this.next();
-          } else {
-            this.prev();
+          if (Math.abs(diffX) > threshold && touchDuration < 500) {
+            if (diffX > 0) {
+              this.next();
+            } else {
+              this.prev();
+            }
           }
         }
+
         isSwiping = false;
+        this.isPanning = false;
       },
       { passive: true }
     );
 
     // Double tap to zoom on mobile
     let lastTap = 0;
+    let lastTapX = 0;
+    let lastTapY = 0;
+
     this.image.addEventListener('touchend', (e) => {
       const currentTime = Date.now();
       const tapLength = currentTime - lastTap;
+      const touch = e.changedTouches[0];
+
       if (tapLength < 300 && tapLength > 0) {
         e.preventDefault();
-        this.toggleZoom(e);
+        e.stopPropagation();
+        this.toggleZoom(touch.clientX, touch.clientY);
       }
+
       lastTap = currentTime;
+      lastTapX = touch.clientX;
+      lastTapY = touch.clientY;
     });
 
+    // ============ MOUSE EVENTS ============
     // Click to zoom on desktop
     this.image.addEventListener('click', (e) => {
-      if (window.innerWidth >= 750) {
-        this.toggleZoom(e);
+      // Only toggle zoom if we weren't just panning
+      if (!this.wasPanning && window.innerWidth >= 750) {
+        this.toggleZoom(e.clientX, e.clientY);
       }
+      this.wasPanning = false;
     });
 
-    // Pan when zoomed - desktop
+    // Mouse pan when zoomed
     this.imageWrapper.addEventListener('mousedown', (e) => {
       if (!this.isZoomed) return;
       e.preventDefault();
@@ -258,15 +272,17 @@ class ProductLightbox {
 
     document.addEventListener('mousemove', (e) => {
       if (!this.isPanning || !this.isZoomed) return;
+
+      this.wasPanning = true;
       this.translateX = e.clientX - this.panStartX;
       this.translateY = e.clientY - this.panStartY;
-      this.applyTransform(this.scale, this.translateX, this.translateY);
+      this.constrainPan();
+      this.applyTransform();
     });
 
     document.addEventListener('mouseup', () => {
       if (this.isPanning) {
         this.isPanning = false;
-        this.constrainPan();
         this.imageWrapper.style.cursor = this.isZoomed ? 'grab' : 'zoom-in';
       }
     });
@@ -276,94 +292,136 @@ class ProductLightbox {
     return Math.hypot(touch1.clientX - touch2.clientX, touch1.clientY - touch2.clientY);
   }
 
-  toggleZoom(e) {
+  // Get image bounds relative to container
+  getImageBounds() {
+    const containerRect = this.container.getBoundingClientRect();
+    const imageRect = this.image.getBoundingClientRect();
+
+    // Get the base (unscaled) dimensions
+    // Since we use CSS transform, getBoundingClientRect gives us scaled dimensions
+    // We need to divide by current scale to get base dimensions
+    const baseWidth = imageRect.width / this.scale;
+    const baseHeight = imageRect.height / this.scale;
+
+    return {
+      containerWidth: containerRect.width,
+      containerHeight: containerRect.height,
+      imageWidth: this.image.naturalWidth || baseWidth,
+      imageHeight: this.image.naturalHeight || baseHeight,
+      displayWidth: baseWidth,
+      displayHeight: baseHeight,
+      containerCenterX: containerRect.width / 2,
+      containerCenterY: containerRect.height / 2,
+    };
+  }
+
+  // Apply transform to image with optional animation
+  applyTransform(animate = false) {
+    if (animate) {
+      this.image.style.transition = 'transform 0.3s ease-out';
+      setTimeout(() => {
+        this.image.style.transition = '';
+      }, 300);
+    }
+    this.image.style.transform = `translate(${this.translateX}px, ${this.translateY}px) scale(${this.scale})`;
+  }
+
+  // Constrain pan to keep image within reasonable bounds
+  constrainPan() {
+    const bounds = this.getImageBounds();
+    const scaledWidth = bounds.displayWidth * this.scale;
+    const scaledHeight = bounds.displayHeight * this.scale;
+
+    // Calculate max pan distances - allow panning when zoomed image is larger than container
+    const maxPanX = Math.max(0, (scaledWidth - bounds.containerWidth) / 2);
+    const maxPanY = Math.max(0, (scaledHeight - bounds.containerHeight) / 2);
+
+    // Constrain translate values
+    this.translateX = Math.max(-maxPanX, Math.min(maxPanX, this.translateX));
+    this.translateY = Math.max(-maxPanY, Math.min(maxPanY, this.translateY));
+  }
+
+  // Zoom to a specific point (for click/tap zoom)
+  zoomToPoint(newScale, pointX, pointY) {
+    const oldScale = this.scale;
+    this.scale = Math.max(this.minScale, Math.min(this.maxScale, newScale));
+    this.isZoomed = this.scale > 1;
+
+    if (this.scale === oldScale) return;
+
+    // Get image position
+    const imageRect = this.image.getBoundingClientRect();
+    const containerRect = this.container.getBoundingClientRect();
+
+    // Calculate the point relative to image center
+    const imageCenterX = imageRect.left + imageRect.width / 2;
+    const imageCenterY = imageRect.top + imageRect.height / 2;
+
+    // Calculate offset from center to click point
+    const offsetX = pointX - imageCenterX;
+    const offsetY = pointY - imageCenterY;
+
+    // Adjust translate to zoom toward the point
+    const scaleRatio = this.scale / oldScale;
+    this.translateX = this.translateX - offsetX * (scaleRatio - 1);
+    this.translateY = this.translateY - offsetY * (scaleRatio - 1);
+
+    this.constrainPan();
+    this.applyTransform();
+
+    // Update cursor
+    this.imageWrapper.style.cursor = this.isZoomed ? 'grab' : 'zoom-in';
+  }
+
+  toggleZoom(clientX, clientY) {
     if (this.isZoomed) {
-      this.resetZoom();
+      this.resetZoom(true);
     } else {
-      const targetScale = 2.5;
+      // Zoom in to 2x centered on click/tap position
+      const targetScale = 2;
+
+      // Get image rect (need to get it before scaling)
+      const imageRect = this.image.getBoundingClientRect();
+
+      // Calculate where user clicked relative to image center
+      const imageCenterX = imageRect.left + imageRect.width / 2;
+      const imageCenterY = imageRect.top + imageRect.height / 2;
+
+      // Offset from center to click point
+      const offsetX = clientX - imageCenterX;
+      const offsetY = clientY - imageCenterY;
+
+      // Set scale
       this.scale = targetScale;
       this.isZoomed = true;
 
-      // Get click/tap position relative to image
-      const rect = this.image.getBoundingClientRect();
-      let clickX, clickY;
+      // Calculate translate to center the clicked point
+      // When we scale, we want the clicked point to stay in the same screen position
+      // So we need to translate by the offset * (scale - 1)
+      this.translateX = -offsetX * (this.scale - 1);
+      this.translateY = -offsetY * (this.scale - 1);
 
-      if (e.touches && e.touches.length > 0) {
-        clickX = e.touches[0].clientX;
-        clickY = e.touches[0].clientY;
-      } else if (e.clientX !== undefined && e.clientY !== undefined) {
-        clickX = e.clientX;
-        clickY = e.clientY;
-      } else {
-        // Fallback to center
-        clickX = rect.left + rect.width / 2;
-        clickY = rect.top + rect.height / 2;
-      }
-
-      // Calculate the point in the image we want to zoom to
-      const offsetX = (clickX - rect.left) / rect.width;
-      const offsetY = (clickY - rect.top) / rect.height;
-
-      // Calculate container center
-      const containerRect = this.container.getBoundingClientRect();
-      const containerCenterX = containerRect.width / 2;
-      const containerCenterY = containerRect.height / 2;
-
-      // Calculate translation to center the clicked point
-      const imageWidth = rect.width * targetScale;
-      const imageHeight = rect.height * targetScale;
-
-      this.translateX = containerCenterX - offsetX * imageWidth;
-      this.translateY = containerCenterY - offsetY * imageHeight;
-
-      // Apply transform and constrain
-      this.applyTransform(this.scale, this.translateX, this.translateY);
       this.constrainPan();
+      this.applyTransform(true);
+
       this.imageWrapper.style.cursor = 'grab';
     }
   }
 
-  applyTransform(scale, translateX, translateY) {
-    this.scale = scale;
-    this.image.style.transform = `scale(${scale}) translate(${translateX / scale}px, ${translateY / scale}px)`;
-  }
-
-  constrainPan() {
-    if (!this.isZoomed) return;
-
-    const containerRect = this.container.getBoundingClientRect();
-
-    // Get the original image dimensions (unscaled)
-    const imgWidth = this.image.naturalWidth || this.image.offsetWidth;
-    const imgHeight = this.image.naturalHeight || this.image.offsetHeight;
-
-    // Calculate the displayed dimensions before transform
-    const displayWidth = this.image.offsetWidth;
-    const displayHeight = this.image.offsetHeight;
-
-    // Calculate scaled dimensions
-    const scaledWidth = displayWidth * this.scale;
-    const scaledHeight = displayHeight * this.scale;
-
-    // Calculate how much we can translate
-    // If scaled image is larger than container, we can pan
-    // The max translation is half the difference between scaled size and container size
-    const maxTranslateX = Math.max(0, (scaledWidth - containerRect.width) / 2);
-    const maxTranslateY = Math.max(0, (scaledHeight - containerRect.height) / 2);
-
-    // Constrain translation to keep image covering the viewport
-    this.translateX = Math.max(-maxTranslateX, Math.min(maxTranslateX, this.translateX));
-    this.translateY = Math.max(-maxTranslateY, Math.min(maxTranslateY, this.translateY));
-
-    this.applyTransform(this.scale, this.translateX, this.translateY);
-  }
-
-  resetZoom() {
+  resetZoom(animate = false) {
     this.scale = 1;
     this.isZoomed = false;
     this.translateX = 0;
     this.translateY = 0;
-    this.image.style.transform = 'scale(1)';
+
+    if (animate) {
+      this.image.style.transition = 'transform 0.3s ease-out';
+      setTimeout(() => {
+        this.image.style.transition = '';
+      }, 300);
+    }
+
+    this.image.style.transform = 'translate(0px, 0px) scale(1)';
     this.imageWrapper.style.cursor = 'zoom-in';
   }
 
