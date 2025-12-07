@@ -32,13 +32,28 @@
       aria-label="{{ 'products.modal.label' | t }}"
       tabindex="0"
     >
+      {%- comment -%} Always show main product media first {%- endcomment -%}
       {%- liquid
-        if product.selected_or_first_available_variant.featured_media != null
-          assign media = product.selected_or_first_available_variant.featured_media
-          render 'product-media', media: media, loop: section.settings.enable_video_looping, variant_image: section.settings.hide_variants
+        assign main_product_media = product.media.first
+        if main_product_media
+          if section.settings.hide_variants and variant_images contains main_product_media.src or variant_images contains main_product_media.id
+            assign variant_image = true
+          else
+            assign variant_image = false
+          endif
+          render 'product-media', media: main_product_media, loop: section.settings.enable_video_looping, variant_image: variant_image
         endif
       -%}
 
+      {%- comment -%} Show variant featured media as second if exists and different from main {%- endcomment -%}
+      {%- liquid
+        if product.selected_or_first_available_variant.featured_media != null and product.selected_or_first_available_variant.featured_media.id != main_product_media.id
+          assign featured_media = product.selected_or_first_available_variant.featured_media
+          render 'product-media', media: featured_media, loop: section.settings.enable_video_looping, variant_image: section.settings.hide_variants
+        endif
+      -%}
+
+      {%- comment -%} Show remaining media {%- endcomment -%}
       {%- for media in product.media -%}
         {%- liquid
           if section.settings.hide_variants and variant_images contains media.src or variant_images contains media.id
@@ -47,7 +62,7 @@
             assign variant_image = false
           endif
 
-          unless media.id == product.selected_or_first_available_variant.featured_media.id
+          unless media.id == main_product_media.id or media.id == product.selected_or_first_available_variant.featured_media.id
             render 'product-media', media: media, loop: section.settings.enable_video_looping, variant_image: variant_image
           endunless
         -%}
