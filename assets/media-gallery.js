@@ -67,11 +67,6 @@ if (!customElements.get('media-gallery')) {
         const activeMedia = this.elements.viewer.querySelector('.is-active[data-media-id]');
         if (!activeMedia) return;
 
-        // Immediately scroll to active media on mobile (no delay to prevent flash of wrong image)
-        if (!this.mql.matches) {
-          activeMedia.parentElement.scrollLeft = activeMedia.offsetLeft;
-        }
-
         // Also set active thumbnail if exists
         if (this.elements.thumbnails) {
           const activeThumbnail = this.elements.thumbnails.querySelector(
@@ -79,6 +74,11 @@ if (!customElements.get('media-gallery')) {
           );
           this.setActiveThumbnail(activeThumbnail);
         }
+
+        // // Immediately scroll to active media on mobile (no delay to prevent flash of wrong image)
+        // if (!this.mql.matches) {
+        //   activeMedia.parentElement.scrollLeft = activeMedia.offsetLeft;
+        // }
       }
 
       // Get variant image data by variant ID (instant, no API call needed)
@@ -90,7 +90,7 @@ if (!customElements.get('media-gallery')) {
         const thumbnail = this.elements.thumbnails.querySelector(
           `[data-target="${event.detail.currentElement.dataset.mediaId}"]`
         );
-        this.setActiveThumbnail(thumbnail);
+        // this.setActiveThumbnail(thumbnail);
       }
 
       setActiveMedia(mediaId, prepend) {
@@ -120,7 +120,7 @@ if (!customElements.get('media-gallery')) {
         this.preventStickyHeader();
         window.setTimeout(() => {
           if (!this.mql.matches || this.elements.thumbnails) {
-            activeMedia.parentElement.scrollTo({ left: activeMedia.offsetLeft });
+            activeMedia.parentElement.scrollTo({ left: activeMedia.offsetLeft, behavior: 'instant' });
           }
           const activeMediaRect = activeMedia.getBoundingClientRect();
           // Don't scroll if the image is already in view
@@ -145,7 +145,18 @@ if (!customElements.get('media-gallery')) {
         thumbnail.querySelector('button').setAttribute('aria-current', true);
         if (this.elements.thumbnails.isSlideVisible(thumbnail, 10)) return;
 
-        this.elements.thumbnails.slider.scrollTo({ left: thumbnail.offsetLeft });
+        // Center the thumbnail in the viewport with instant scroll to prevent pull-back
+        const container = this.elements.thumbnails.slider;
+        const marginLeft = parseFloat(getComputedStyle(thumbnail).marginLeft) || 0;
+        const marginRight = parseFloat(getComputedStyle(thumbnail).marginRight) || 0;
+
+        const scrollLeft =
+          thumbnail.offsetLeft - container.offsetWidth / 2 + thumbnail.offsetWidth / 2 + marginLeft - marginRight - 20;
+
+        // Use requestAnimationFrame to ensure smooth scroll without pull-back effect
+        requestAnimationFrame(() => {
+          this.elements.thumbnails.slider.scrollTo({ left: scrollLeft, behavior: 'auto' });
+        });
       }
 
       announceLiveRegion(activeItem, position) {
