@@ -65,10 +65,12 @@
   
   comment
     Determine which image should be active on initial load
-    If variant is selected and has different featured media, that should be active
+    Only show variant image as active if:
+    1. There's a variant parameter in the URL (product.selected_variant exists)
+    2. The variant has featured media that's different from main product image
   endcomment
   assign initial_active_is_variant = false
-  if current_variant_media != null and current_variant_media.id != main_product_media.id
+  if product.selected_variant and current_variant_media != null and current_variant_media.id != main_product_media.id
     assign initial_active_is_variant = true
   endif
 -%}

@@ -67,12 +67,18 @@ if (!customElements.get('media-gallery')) {
         const activeMedia = this.elements.viewer.querySelector('.is-active[data-media-id]');
         if (!activeMedia) return;
 
-        // Scroll to active media on mobile
-        window.setTimeout(() => {
-          if (!this.mql.matches) {
-            activeMedia.parentElement.scrollTo({ left: activeMedia.offsetLeft });
-          }
-        }, 0);
+        // Immediately scroll to active media on mobile (no delay to prevent flash of wrong image)
+        if (!this.mql.matches) {
+          activeMedia.parentElement.scrollLeft = activeMedia.offsetLeft;
+        }
+
+        // Also set active thumbnail if exists
+        if (this.elements.thumbnails) {
+          const activeThumbnail = this.elements.thumbnails.querySelector(
+            `[data-target="${activeMedia.dataset.mediaId}"]`
+          );
+          this.setActiveThumbnail(activeThumbnail);
+        }
       }
 
       // Get variant image data by variant ID (instant, no API call needed)
