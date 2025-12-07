@@ -304,12 +304,12 @@
   margin-top: 0;
   margin-bottom: 0;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.3;
+  line-height: 1.5;
 }
 
 .card__heading:last-child {
@@ -318,11 +318,15 @@
 
 .card__heading a {
   display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.card__heading a:hover {
+  text-decoration: underline;
 }
 
 .card__description {

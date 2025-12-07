@@ -287,7 +287,6 @@ function debounce(fn, wait) {
   };
 }
 
-
 function throttle(fn, delay) {
   let lastCall = 0;
   return function (...args) {
@@ -683,6 +682,16 @@ class ModalOpener extends HTMLElement {
     const button = this.querySelector('button');
 
     if (!button) return;
+
+    // Check if this is an image opener with lightbox - let the lightbox JS handle it
+    const isImageWithLightbox =
+      this.classList.contains('product__modal-opener--image') && this.querySelector('.image-magnify-lightbox');
+
+    if (isImageWithLightbox) {
+      // Don't open modal for images using lightbox
+      return;
+    }
+
     button.addEventListener('click', () => {
       const modal = document.querySelector(this.getAttribute('data-modal'));
       if (modal) modal.show(button);
@@ -1282,51 +1291,39 @@ if (!customElements.get('bulk-add')) {
 }
 
 class CartPerformance {
-  static #metric_prefix = "cart-performance"
+  static #metric_prefix = 'cart-performance';
 
   static createStartingMarker(benchmarkName) {
-    const metricName = `${CartPerformance.#metric_prefix}:${benchmarkName}`
+    const metricName = `${CartPerformance.#metric_prefix}:${benchmarkName}`;
     return performance.mark(`${metricName}:start`);
   }
 
   static measureFromEvent(benchmarkName, event) {
-    const metricName = `${CartPerformance.#metric_prefix}:${benchmarkName}`
+    const metricName = `${CartPerformance.#metric_prefix}:${benchmarkName}`;
     const startMarker = performance.mark(`${metricName}:start`, {
-      startTime: event.timeStamp
+      startTime: event.timeStamp,
     });
 
     const endMarker = performance.mark(`${metricName}:end`);
 
-    performance.measure(
-      metricName,
-      `${metricName}:start`,
-      `${metricName}:end`
-    );
+    performance.measure(metricName, `${metricName}:start`, `${metricName}:end`);
   }
 
   static measureFromMarker(benchmarkName, startMarker) {
-    const metricName = `${CartPerformance.#metric_prefix}:${benchmarkName}`
+    const metricName = `${CartPerformance.#metric_prefix}:${benchmarkName}`;
     const endMarker = performance.mark(`${metricName}:end`);
 
-    performance.measure(
-      metricName,
-      startMarker.name,
-      `${metricName}:end`
-    );
+    performance.measure(metricName, startMarker.name, `${metricName}:end`);
   }
 
   static measure(benchmarkName, callback) {
-    const metricName = `${CartPerformance.#metric_prefix}:${benchmarkName}`
+    const metricName = `${CartPerformance.#metric_prefix}:${benchmarkName}`;
     const startMarker = performance.mark(`${metricName}:start`);
 
     callback();
 
     const endMarker = performance.mark(`${metricName}:end`);
 
-    performance.measure(
-      metricName,
-      `${metricName}:start`,
-      `${metricName}:end`
-    );
+    performance.measure(metricName, `${metricName}:start`, `${metricName}:end`);
   }
 }

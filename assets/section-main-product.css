@@ -624,6 +624,11 @@ a.product__text {
   cursor: zoom-in;
 }
 
+/* Hide toggle button when using lightbox - the image handles clicks */
+.product__modal-opener--image:has(.image-magnify-lightbox) .product__media-toggle {
+  pointer-events: none;
+}
+
 .product__modal-opener:hover .product__media-icon {
   border: 0.1rem solid rgba(var(--color-foreground), 0.1);
 }
@@ -1072,10 +1077,6 @@ a.product__text {
   }
 }
 
-.thumbnail-list_item--variant:not(:first-child) {
-  display: none;
-}
-
 @media screen and (min-width: 990px) {
   .thumbnail-list {
     grid-template-columns: repeat(4, 1fr);
@@ -1107,9 +1108,9 @@ a.product__text {
 
   .thumbnail-slider .thumbnail-list.slider {
     display: flex;
-    padding: 0.5rem;
+    /* padding: 0.5rem; */
     flex: 1;
-    scroll-padding-left: 0.5rem;
+    /* scroll-padding-left: 0.5rem; */
   }
 
   .thumbnail-list__item.slider__slide {
@@ -1188,6 +1189,235 @@ a.product__text {
 
 .image-magnify-hover {
   cursor: zoom-in;
+}
+
+/* Product Lightbox Styles */
+.product-lightbox {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  background: rgb(var(--color-background));
+}
+
+.product-lightbox.is-open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.product-lightbox__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgb(var(--color-background));
+}
+
+.product-lightbox__close {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  width: 44px;
+  height: 44px;
+  background: rgba(var(--color-foreground), 0.1);
+  border: 1px solid rgba(var(--color-foreground), 0.2);
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.product-lightbox__close svg {
+  width: 24px;
+  height: 24px;
+  stroke: rgb(var(--color-foreground));
+}
+
+.product-lightbox__close:hover {
+  transform: scale(1.1);
+  background: rgba(var(--color-foreground), 0.15);
+}
+
+.product-lightbox__nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 50px;
+  height: 50px;
+  background: rgba(var(--color-foreground), 0.05);
+  border: 1px solid rgba(var(--color-foreground), 0.1);
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.product-lightbox__nav svg {
+  width: 24px;
+  height: 24px;
+  stroke: rgb(var(--color-foreground));
+}
+
+.product-lightbox__nav:hover {
+  background: rgba(var(--color-foreground), 0.1);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.product-lightbox__nav--prev {
+  left: 1.5rem;
+}
+
+.product-lightbox__nav--next {
+  right: 1.5rem;
+}
+
+.product-lightbox__container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px 120px;
+}
+
+.product-lightbox__image-wrapper {
+  max-width: 90%;
+  max-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: zoom-in;
+}
+
+.product-lightbox__image {
+  max-width: 100%;
+  max-height: calc(100vh - 250px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  transition: opacity 0.3s ease, transform 0.2s ease;
+  transform-origin: center center;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.product-lightbox__counter {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(var(--color-foreground), 0.7);
+  font-size: 14px;
+  z-index: 10;
+}
+
+.product-lightbox__thumbnails {
+  position: absolute;
+  bottom: 4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+  max-width: 80%;
+  overflow-x: auto;
+  padding: 8px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.product-lightbox__thumbnails::-webkit-scrollbar {
+  display: none;
+}
+
+.product-lightbox__thumb {
+  flex-shrink: 0;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  overflow: hidden;
+  opacity: 0.5;
+  transition: opacity 0.2s ease, border-color 0.2s ease;
+  background: transparent;
+}
+
+.product-lightbox__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-lightbox__thumb:hover {
+  opacity: 0.8;
+}
+
+.product-lightbox__thumb.is-active {
+  opacity: 1;
+  border-color: rgb(var(--color-foreground));
+}
+
+/* Mobile adjustments */
+@media screen and (max-width: 749px) {
+  .product-lightbox__nav {
+    width: 40px;
+    height: 40px;
+  }
+
+  .product-lightbox__nav--prev {
+    left: 0.5rem;
+  }
+
+  .product-lightbox__nav--next {
+    right: 0.5rem;
+  }
+
+  .product-lightbox__container {
+    padding: 50px 10px;
+  }
+
+  .product-lightbox__image-wrapper {
+    max-width: 100%;
+  }
+
+  .product-lightbox__image {
+    max-height: calc(100vh - 140px);
+  }
+
+  .product-lightbox__thumbnails {
+    bottom: 2.5rem;
+  }
+
+  .product-lightbox__thumb {
+    width: 40px;
+    height: 40px;
+  }
+
+  .product-lightbox__counter {
+    bottom: 1rem;
+    font-size: 12px;
+  }
 }
 
 .product__modal-opener--image .product__media-zoom-none,
@@ -1709,7 +1939,7 @@ a.product__text {
 .product__description-wrapper .product__description {
   font-size: 1.4rem;
   /* line-height: 1.7; */
-  line-height: 1;
+  /* line-height: 1; */
   color: rgba(var(--color-foreground), 0.85);
 }
 
@@ -1847,4 +2077,44 @@ a.product__text {
 #judgeme_product_reviews {
   width: 100%;
   max-width: 100%;
+}
+
+/* ==============================================
+   Mobile Product Gallery Customizations
+   ============================================== */
+
+@media screen and (max-width: 749px) {
+  /* Hide thumbnail navigation buttons on mobile for seamless scrolling */
+  .product-gallery-thumbnails .thumbnail-nav-btn {
+    display: none !important;
+  }
+
+  /* Allow thumbnails to show more items in one line */
+  .product-gallery-thumbnails .thumbnail-list {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.8rem;
+    padding: 0 1rem;
+    scroll-padding-left: 1rem;
+  }
+
+  /* Make thumbnails smaller on mobile to fit more */
+  .product-gallery-thumbnails .thumbnail-list__item {
+    flex: 0 0 auto;
+    width: calc(28% - 0.6rem);
+  }
+
+  /* Add margin to first and last thumbnail items for better spacing */
+  .product-gallery-thumbnails .thumbnail-list__item:first-child {
+    margin-left: 0.5rem;
+  }
+
+  .product-gallery-thumbnails .thumbnail-list__item:last-child {
+    margin-right: 0.5rem;
+  }
+
+  .product-gallery-thumbnails .thumbnail {
+    width: 100%;
+    aspect-ratio: 1;
+  }
 }

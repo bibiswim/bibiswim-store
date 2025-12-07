@@ -10,6 +10,14 @@ if (!customElements.get('media-gallery')) {
           thumbnails: this.querySelector('[id^="GalleryThumbnails"]'),
         };
         this.mql = window.matchMedia('(min-width: 750px)');
+
+        // Load variant images data from embedded JSON for instant switching
+        this.variantImageData = this.loadVariantImageData();
+        this.preloadVariantImages();
+
+        // On mobile, ensure the active media is scrolled into view on page load
+        this.initializeActiveMedia();
+
         if (!this.elements.thumbnails) return;
 
         this.elements.viewer.addEventListener('slideChanged', debounce(this.onSlideChanged.bind(this), 500));
@@ -19,6 +27,63 @@ if (!customElements.get('media-gallery')) {
             .addEventListener('click', this.setActiveMedia.bind(this, mediaToSwitch.dataset.target, false));
         });
         if (this.dataset.desktopLayout.includes('thumbnail') && this.mql.matches) this.removeListSemantic();
+      }
+
+      // Load variant image data from embedded JSON script
+      loadVariantImageData() {
+        const sectionId = this.id.replace('MediaGallery-', '');
+        const dataScript = document.getElementById(`VariantImageData-${sectionId}`);
+        if (dataScript) {
+          try {
+            return JSON.parse(dataScript.textContent);
+          } catch (e) {
+            console.warn('Failed to parse variant image data:', e);
+          }
+        }
+        return null;
+      }
+
+      // Preload all variant images for instant display
+      preloadVariantImages() {
+        if (!this.variantImageData?.variants) return;
+
+        Object.values(this.variantImageData.variants).forEach((variant) => {
+          if (variant.imageSrc) {
+            const img = new Image();
+            img.src = variant.imageSrc;
+            // Also preload thumbnail
+            if (variant.thumbSrc) {
+              const thumb = new Image();
+              thumb.src = variant.thumbSrc;
+            }
+          }
+        });
+      }
+
+      // Initialize active media on page load (especially for mobile when URL has variant param)
+      initializeActiveMedia() {
+        if (!this.elements.viewer) return;
+
+        const activeMedia = this.elements.viewer.querySelector('.is-active[data-media-id]');
+        if (!activeMedia) return;
+
+        // Immediately scroll to active media on mobile (no delay to prevent flash of wrong image)
+        if (!this.mql.matches) {
+          activeMedia.parentElement.scrollLeft = activeMedia.offsetLeft;
+        }
+
+        // Also set active thumbnail if exists
+        if (this.elements.thumbnails) {
+          const activeThumbnail = this.elements.thumbnails.querySelector(
+            `[data-target="${activeMedia.dataset.mediaId}"]`
+          );
+          this.setActiveThumbnail(activeThumbnail);
+        }
+      }
+
+      // Get variant image data by variant ID (instant, no API call needed)
+      getVariantImageData(variantId) {
+        return this.variantImageData?.variants?.[variantId] || null;
       }
 
       onSlideChanged(event) {
@@ -45,7 +110,8 @@ if (!customElements.get('media-gallery')) {
 
           if (this.elements.thumbnails) {
             const activeThumbnail = this.elements.thumbnails.querySelector(`[data-target="${mediaId}"]`);
-            activeThumbnail.parentElement.firstChild !== activeThumbnail && activeThumbnail.parentElement.prepend(activeThumbnail);
+            activeThumbnail.parentElement.firstChild !== activeThumbnail &&
+              activeThumbnail.parentElement.prepend(activeThumbnail);
           }
 
           if (this.elements.viewer.slider) this.elements.viewer.resetPages();
@@ -111,6 +177,50 @@ if (!customElements.get('media-gallery')) {
         if (!this.elements.viewer.slider) return;
         this.elements.viewer.slider.setAttribute('role', 'presentation');
         this.elements.viewer.sliderItems.forEach((slide) => slide.setAttribute('role', 'presentation'));
+      }
+
+      // Update the variant slot (2nd position) with new variant image
+      updateVariantSlot(sectionId, newVariantMediaId, newImageSrc, newImageAlt) {
+        // Update main viewer variant slot
+        const variantSlot = this.elements.viewer.querySelector('[data-variant-media-slot="true"]');
+        if (variantSlot) {
+          const newMediaId = `${sectionId}-${newVariantMediaId}`;
+          variantSlot.dataset.mediaId = newMediaId;
+          variantSlot.id = `Slide-${sectionId}-${newVariantMediaId}`;
+
+          // Update the image inside
+          const img = variantSlot.querySelector('img');
+          if (img && newImageSrc) {
+            img.src = newImageSrc;
+            img.srcset = '';
+            img.alt = newImageAlt || '';
+          }
+        }
+
+        // Update thumbnail variant slot
+        if (this.elements.thumbnails) {
+          const variantThumbSlot = this.elements.thumbnails.querySelector('[data-variant-thumbnail-slot="true"]');
+          if (variantThumbSlot) {
+            const newMediaId = `${sectionId}-${newVariantMediaId}`;
+            variantThumbSlot.dataset.target = newMediaId;
+
+            // Update the thumbnail image
+            const thumbImg = variantThumbSlot.querySelector('img');
+            if (thumbImg && newImageSrc) {
+              // Generate smaller thumbnail URL
+              const thumbSrc = newImageSrc.replace(/width=\d+/, 'width=416');
+              thumbImg.src = thumbSrc;
+              thumbImg.srcset = '';
+              thumbImg.alt = newImageAlt || '';
+            }
+
+            // Re-bind click event for the updated thumbnail
+            const button = variantThumbSlot.querySelector('button');
+            if (button) {
+              button.onclick = () => this.setActiveMedia(newMediaId, false);
+            }
+          }
+        }
       }
     }
   );

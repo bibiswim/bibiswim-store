@@ -175,7 +175,8 @@ if (!customElements.get('product-info')) {
             return;
           }
 
-          this.updateMedia(html, variant?.featured_media?.id);
+          // Try to use cached variant image data for instant update
+          this.updateMediaWithCache(variant);
 
           const updateSourceFromDestination = (id, shouldHide = (source) => false) => {
             const source = html.getElementById(`${id}-${this.sectionId}`);
@@ -239,70 +240,116 @@ if (!customElements.get('product-info')) {
         document.querySelectorAll(selectors).forEach(({ classList }) => classList.add('hidden'));
       }
 
+      // Use cached variant image data for instant media updates (no API wait)
+      updateMediaWithCache(variant) {
+        if (!variant?.id) return;
+
+        const mediaGallery = this.querySelector('media-gallery');
+        if (!mediaGallery) return;
+
+        // Try to get variant image data from cache
+        const variantData = mediaGallery.getVariantImageData?.(variant.id);
+
+        if (variantData && variantData.mediaId) {
+          const sectionId = this.dataset.section;
+
+          // Update the variant slot using cached data (instant, no network needed)
+          if (mediaGallery.updateVariantSlot) {
+            mediaGallery.updateVariantSlot(sectionId, variantData.mediaId, variantData.imageSrc, variantData.alt);
+          }
+
+          // Set the variant slot as active
+          const variantMediaId = `${sectionId}-${variantData.mediaId}`;
+          mediaGallery.setActiveMedia?.(variantMediaId, false);
+        }
+      }
+
       updateMedia(html, variantFeaturedMediaId) {
         if (!variantFeaturedMediaId) return;
 
+        const mediaGallery = this.querySelector('media-gallery');
         const mediaGallerySource = this.querySelector('media-gallery ul');
         const mediaGalleryDestination = html.querySelector(`media-gallery ul`);
 
-        const refreshSourceData = () => {
-          if (this.hasAttribute('data-zoom-on-hover')) enableZoomOnHover(2);
-          const mediaGallerySourceItems = Array.from(mediaGallerySource.querySelectorAll('li[data-media-id]'));
-          const sourceSet = new Set(mediaGallerySourceItems.map((item) => item.dataset.mediaId));
-          const sourceMap = new Map(
-            mediaGallerySourceItems.map((item, index) => [item.dataset.mediaId, { item, index }])
-          );
-          return [mediaGallerySourceItems, sourceSet, sourceMap];
-        };
+        // Get the new variant's featured media info from the HTML response
+        const newVariantSlide = html.querySelector(`media-gallery [data-variant-media-slot="true"]`);
 
-        if (mediaGallerySource && mediaGalleryDestination) {
-          let [mediaGallerySourceItems, sourceSet, sourceMap] = refreshSourceData();
-          const mediaGalleryDestinationItems = Array.from(
-            mediaGalleryDestination.querySelectorAll('li[data-media-id]')
-          );
-          const destinationSet = new Set(mediaGalleryDestinationItems.map(({ dataset }) => dataset.mediaId));
-          let shouldRefresh = false;
+        if (newVariantSlide && mediaGallery) {
+          // Extract the new variant media ID from the data attribute
+          const newMediaId = newVariantSlide.dataset.mediaId;
+          const sectionId = this.dataset.section;
 
-          // add items from new data not present in DOM
-          for (let i = mediaGalleryDestinationItems.length - 1; i >= 0; i--) {
-            if (!sourceSet.has(mediaGalleryDestinationItems[i].dataset.mediaId)) {
-              mediaGallerySource.prepend(mediaGalleryDestinationItems[i]);
-              shouldRefresh = true;
-            }
+          // Get the image source from the new variant slide
+          const newImg = newVariantSlide.querySelector('img');
+          const newImageSrc = newImg ? newImg.src : null;
+          const newImageAlt = newImg ? newImg.alt : '';
+
+          // Update the variant slot in the current gallery
+          if (mediaGallery.updateVariantSlot) {
+            mediaGallery.updateVariantSlot(sectionId, variantFeaturedMediaId, newImageSrc, newImageAlt);
           }
 
-          // remove items from DOM not present in new data
-          for (let i = 0; i < mediaGallerySourceItems.length; i++) {
-            if (!destinationSet.has(mediaGallerySourceItems[i].dataset.mediaId)) {
-              mediaGallerySourceItems[i].remove();
-              shouldRefresh = true;
+          // Set the variant slot as active
+          const variantMediaId = `${sectionId}-${variantFeaturedMediaId}`;
+          mediaGallery.setActiveMedia?.(variantMediaId, false);
+        } else {
+          // Fallback to original behavior for products without variant slot
+          const refreshSourceData = () => {
+            if (this.hasAttribute('data-zoom-on-hover')) enableZoomOnHover(2);
+            const mediaGallerySourceItems = Array.from(mediaGallerySource.querySelectorAll('li[data-media-id]'));
+            const sourceSet = new Set(mediaGallerySourceItems.map((item) => item.dataset.mediaId));
+            const sourceMap = new Map(
+              mediaGallerySourceItems.map((item, index) => [item.dataset.mediaId, { item, index }])
+            );
+            return [mediaGallerySourceItems, sourceSet, sourceMap];
+          };
+
+          if (mediaGallerySource && mediaGalleryDestination) {
+            let [mediaGallerySourceItems, sourceSet, sourceMap] = refreshSourceData();
+            const mediaGalleryDestinationItems = Array.from(
+              mediaGalleryDestination.querySelectorAll('li[data-media-id]')
+            );
+            const destinationSet = new Set(mediaGalleryDestinationItems.map(({ dataset }) => dataset.mediaId));
+            let shouldRefresh = false;
+
+            // add items from new data not present in DOM
+            for (let i = mediaGalleryDestinationItems.length - 1; i >= 0; i--) {
+              if (!sourceSet.has(mediaGalleryDestinationItems[i].dataset.mediaId)) {
+                mediaGallerySource.prepend(mediaGalleryDestinationItems[i]);
+                shouldRefresh = true;
+              }
             }
+
+            // remove items from DOM not present in new data
+            for (let i = 0; i < mediaGallerySourceItems.length; i++) {
+              if (!destinationSet.has(mediaGallerySourceItems[i].dataset.mediaId)) {
+                mediaGallerySourceItems[i].remove();
+                shouldRefresh = true;
+              }
+            }
+
+            // refresh
+            if (shouldRefresh) [mediaGallerySourceItems, sourceSet, sourceMap] = refreshSourceData();
+
+            // if media galleries don't match, sort to match new data order
+            mediaGalleryDestinationItems.forEach((destinationItem, destinationIndex) => {
+              const sourceData = sourceMap.get(destinationItem.dataset.mediaId);
+
+              if (sourceData && sourceData.index !== destinationIndex) {
+                mediaGallerySource.insertBefore(
+                  sourceData.item,
+                  mediaGallerySource.querySelector(`li:nth-of-type(${destinationIndex + 1})`)
+                );
+
+                // refresh source now that it has been modified
+                [mediaGallerySourceItems, sourceSet, sourceMap] = refreshSourceData();
+              }
+            });
           }
 
-          // refresh
-          if (shouldRefresh) [mediaGallerySourceItems, sourceSet, sourceMap] = refreshSourceData();
-
-          // if media galleries don't match, sort to match new data order
-          mediaGalleryDestinationItems.forEach((destinationItem, destinationIndex) => {
-            const sourceData = sourceMap.get(destinationItem.dataset.mediaId);
-
-            if (sourceData && sourceData.index !== destinationIndex) {
-              mediaGallerySource.insertBefore(
-                sourceData.item,
-                mediaGallerySource.querySelector(`li:nth-of-type(${destinationIndex + 1})`)
-              );
-
-              // refresh source now that it has been modified
-              [mediaGallerySourceItems, sourceSet, sourceMap] = refreshSourceData();
-            }
-          });
+          // set featured media as active in the media gallery without prepending
+          mediaGallery?.setActiveMedia?.(`${this.dataset.section}-${variantFeaturedMediaId}`, false);
         }
-
-        // set featured media as active in the media gallery
-        this.querySelector(`media-gallery`)?.setActiveMedia?.(
-          `${this.dataset.section}-${variantFeaturedMediaId}`,
-          true
-        );
 
         // update media modal
         const modalContent = this.productModal?.querySelector(`.product-media-modal__content`);
