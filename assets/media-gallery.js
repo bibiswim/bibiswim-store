@@ -15,6 +15,9 @@ if (!customElements.get('media-gallery')) {
         this.variantImageData = this.loadVariantImageData();
         this.preloadVariantImages();
 
+        // On mobile, ensure the active media is scrolled into view on page load
+        this.initializeActiveMedia();
+
         if (!this.elements.thumbnails) return;
 
         this.elements.viewer.addEventListener('slideChanged', debounce(this.onSlideChanged.bind(this), 500));
@@ -55,6 +58,21 @@ if (!customElements.get('media-gallery')) {
             }
           }
         });
+      }
+
+      // Initialize active media on page load (especially for mobile when URL has variant param)
+      initializeActiveMedia() {
+        if (!this.elements.viewer) return;
+
+        const activeMedia = this.elements.viewer.querySelector('.is-active[data-media-id]');
+        if (!activeMedia) return;
+
+        // Scroll to active media on mobile
+        window.setTimeout(() => {
+          if (!this.mql.matches) {
+            activeMedia.parentElement.scrollTo({ left: activeMedia.offsetLeft });
+          }
+        }, 0);
       }
 
       // Get variant image data by variant ID (instant, no API call needed)
