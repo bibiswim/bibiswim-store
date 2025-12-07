@@ -309,7 +309,7 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.3;
+  line-height: 1.5;
 }
 
 .card__heading:last-child {
@@ -323,6 +323,10 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.card__heading a:hover {
+  text-decoration: underline;
 }
 
 .card__description {
