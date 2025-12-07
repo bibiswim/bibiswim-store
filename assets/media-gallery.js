@@ -19,6 +19,35 @@ if (!customElements.get('media-gallery')) {
             .addEventListener('click', this.setActiveMedia.bind(this, mediaToSwitch.dataset.target, false));
         });
         if (this.dataset.desktopLayout.includes('thumbnail') && this.mql.matches) this.removeListSemantic();
+
+        // Handle initial page load with variant param - select variant thumbnail if variant is in URL
+        this.handleInitialVariantSelection();
+      }
+
+      handleInitialVariantSelection() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const variantId = urlParams.get('variant');
+
+        if (variantId) {
+          // Check if there's a variant thumbnail slot and select it
+          const variantThumbSlot = this.elements.thumbnails?.querySelector('[data-variant-thumbnail-slot="true"]');
+          if (variantThumbSlot) {
+            // Set the variant thumbnail as active
+            this.setActiveThumbnail(variantThumbSlot);
+
+            // Also set the variant media as active in the viewer
+            const variantMediaId = variantThumbSlot.dataset.target;
+            if (variantMediaId) {
+              const variantSlide = this.elements.viewer.querySelector(`[data-media-id="${variantMediaId}"]`);
+              if (variantSlide) {
+                this.elements.viewer.querySelectorAll('[data-media-id]').forEach((element) => {
+                  element.classList.remove('is-active');
+                });
+                variantSlide.classList.add('is-active');
+              }
+            }
+          }
+        }
       }
 
       onSlideChanged(event) {
@@ -45,7 +74,8 @@ if (!customElements.get('media-gallery')) {
 
           if (this.elements.thumbnails) {
             const activeThumbnail = this.elements.thumbnails.querySelector(`[data-target="${mediaId}"]`);
-            activeThumbnail.parentElement.firstChild !== activeThumbnail && activeThumbnail.parentElement.prepend(activeThumbnail);
+            activeThumbnail.parentElement.firstChild !== activeThumbnail &&
+              activeThumbnail.parentElement.prepend(activeThumbnail);
           }
 
           if (this.elements.viewer.slider) this.elements.viewer.resetPages();
@@ -111,6 +141,50 @@ if (!customElements.get('media-gallery')) {
         if (!this.elements.viewer.slider) return;
         this.elements.viewer.slider.setAttribute('role', 'presentation');
         this.elements.viewer.sliderItems.forEach((slide) => slide.setAttribute('role', 'presentation'));
+      }
+
+      // Update the variant slot (2nd position) with new variant image
+      updateVariantSlot(sectionId, newVariantMediaId, newImageSrc, newImageAlt) {
+        // Update main viewer variant slot
+        const variantSlot = this.elements.viewer.querySelector('[data-variant-media-slot="true"]');
+        if (variantSlot) {
+          const newMediaId = `${sectionId}-${newVariantMediaId}`;
+          variantSlot.dataset.mediaId = newMediaId;
+          variantSlot.id = `Slide-${sectionId}-${newVariantMediaId}`;
+
+          // Update the image inside
+          const img = variantSlot.querySelector('img');
+          if (img && newImageSrc) {
+            img.src = newImageSrc;
+            img.srcset = '';
+            img.alt = newImageAlt || '';
+          }
+        }
+
+        // Update thumbnail variant slot
+        if (this.elements.thumbnails) {
+          const variantThumbSlot = this.elements.thumbnails.querySelector('[data-variant-thumbnail-slot="true"]');
+          if (variantThumbSlot) {
+            const newMediaId = `${sectionId}-${newVariantMediaId}`;
+            variantThumbSlot.dataset.target = newMediaId;
+
+            // Update the thumbnail image
+            const thumbImg = variantThumbSlot.querySelector('img');
+            if (thumbImg && newImageSrc) {
+              // Generate smaller thumbnail URL
+              const thumbSrc = newImageSrc.replace(/width=\d+/, 'width=416');
+              thumbImg.src = thumbSrc;
+              thumbImg.srcset = '';
+              thumbImg.alt = newImageAlt || '';
+            }
+
+            // Re-bind click event for the updated thumbnail
+            const button = variantThumbSlot.querySelector('button');
+            if (button) {
+              button.onclick = () => this.setActiveMedia(newMediaId, false);
+            }
+          }
+        }
       }
     }
   );
