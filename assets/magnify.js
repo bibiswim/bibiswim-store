@@ -70,22 +70,25 @@ class ProductLightbox {
     this.closeBtn.addEventListener('click', () => this.close());
     this.overlay.addEventListener('click', () => this.close());
 
-    // Prevent scroll on lightbox container and image
-    this.lightbox.addEventListener(
-      'wheel',
-      (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      },
-      { passive: false }
-    );
+    // // Prevent scroll on lightbox container and image
+    // this.lightbox.addEventListener(
+    //   'wheel',
+    //   (e) => {
+    //     e.preventDefault();
+    //     e.stopPropagation();
+    //   },
+    //   { passive: false }
+    // );
 
-    // Prevent all touch scrolling on the lightbox to stop background page scroll
     this.lightbox.addEventListener(
       'touchmove',
       (e) => {
+        // Only prevent default if not swiping
+        if (e.touches.length === 1 && !this.isZoomed) {
+          // Allow swipe gestures
+          return;
+        }
         e.preventDefault();
-        e.stopPropagation();
       },
       { passive: false }
     );
