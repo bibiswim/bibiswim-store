@@ -113,13 +113,17 @@ class ProductLightbox {
     let touchStartY = 0;
     let touchEndX = 0;
     let isSwiping = false;
+    let initialPinchDistance = 0;
+    let lastScale = 1;
 
     this.container.addEventListener(
       'touchstart',
       (e) => {
         if (e.touches.length === 2) {
           // Pinch zoom start
-          this.initialDistance = this.getDistance(e.touches[0], e.touches[1]);
+          initialPinchDistance = this.getDistance(e.touches[0], e.touches[1]);
+          lastScale = this.scale;
+          isSwiping = false;
           return;
         }
         touchStartX = e.touches[0].clientX;
@@ -136,9 +140,12 @@ class ProductLightbox {
         if (e.touches.length === 2) {
           // Pinch zoom
           const currentDistance = this.getDistance(e.touches[0], e.touches[1]);
-          const newScale = Math.max(1, Math.min(3, this.scale * (currentDistance / this.initialDistance)));
+          const scale = lastScale * (currentDistance / initialPinchDistance);
+          const newScale = Math.max(1, Math.min(3, scale));
+          this.scale = newScale;
           this.image.style.transform = `scale(${newScale})`;
           this.isZoomed = newScale > 1;
+          this.imageWrapper.style.cursor = newScale > 1 ? 'grab' : 'zoom-in';
           return;
         }
         if (!isSwiping) return;
@@ -152,11 +159,9 @@ class ProductLightbox {
       (e) => {
         if (e.touches.length > 0) return;
 
-        // Reset scale on pinch end
-        if (this.initialDistance > 0) {
-          const computedScale = parseFloat(this.image.style.transform.replace('scale(', '').replace(')', '')) || 1;
-          this.scale = computedScale;
-          this.initialDistance = 0;
+        // Reset pinch zoom tracking
+        if (initialPinchDistance > 0) {
+          initialPinchDistance = 0;
 
           // If scale is close to 1, reset
           if (this.scale < 1.1) {
