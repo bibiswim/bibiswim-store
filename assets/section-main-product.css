@@ -1296,6 +1296,8 @@ a.product__text {
   align-items: center;
   justify-content: center;
   padding: 60px 20px 120px;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .product-lightbox__image-wrapper {
@@ -1304,8 +1306,9 @@ a.product__text {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: visible;
   cursor: zoom-in;
+  position: relative;
 }
 
 .product-lightbox__image {

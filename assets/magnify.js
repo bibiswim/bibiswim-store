@@ -81,9 +81,14 @@ class ProductLightbox {
     // );
 
     // Prevent all touch scrolling on the lightbox to stop background page scroll
+    // But allow scrolling on container when zoomed
     this.lightbox.addEventListener(
       'touchmove',
       (e) => {
+        // Allow scrolling inside container when image is zoomed
+        if (this.isZoomed && e.target.closest('.product-lightbox__container')) {
+          return;
+        }
         e.preventDefault();
         e.stopPropagation();
       },
@@ -113,17 +118,21 @@ class ProductLightbox {
     let touchStartY = 0;
     let touchEndX = 0;
     let isSwiping = false;
-    let initialPinchDistance = 0;
-    let lastScale = 1;
 
     this.container.addEventListener(
       'touchstart',
       (e) => {
         if (e.touches.length === 2) {
           // Pinch zoom start
-          initialPinchDistance = this.getDistance(e.touches[0], e.touches[1]);
-          lastScale = this.scale;
-          isSwiping = false;
+          this.initialDistance = this.getDistance(e.touches[0], e.touches[1]);
+          // Calculate center point of pinch
+          const rect = this.image.getBoundingClientRect();
+          const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+          const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+          // Set transform origin to pinch center
+          const originX = ((centerX - rect.left) / rect.width) * 100;
+          const originY = ((centerY - rect.top) / rect.height) * 100;
+          this.image.style.transformOrigin = `${originX}% ${originY}%`;
           return;
         }
         touchStartX = e.touches[0].clientX;
@@ -140,12 +149,15 @@ class ProductLightbox {
         if (e.touches.length === 2) {
           // Pinch zoom
           const currentDistance = this.getDistance(e.touches[0], e.touches[1]);
-          const scale = lastScale * (currentDistance / initialPinchDistance);
-          const newScale = Math.max(1, Math.min(3, scale));
-          this.scale = newScale;
+          const newScale = Math.max(1, Math.min(3, this.scale * (currentDistance / this.initialDistance)));
           this.image.style.transform = `scale(${newScale})`;
           this.isZoomed = newScale > 1;
-          this.imageWrapper.style.cursor = newScale > 1 ? 'grab' : 'zoom-in';
+
+          // Adjust wrapper to accommodate zoomed size
+          if (this.isZoomed) {
+            this.imageWrapper.style.width = `${this.image.offsetWidth * newScale}px`;
+            this.imageWrapper.style.height = `${this.image.offsetHeight * newScale}px`;
+          }
           return;
         }
         if (!isSwiping) return;
@@ -159,13 +171,19 @@ class ProductLightbox {
       (e) => {
         if (e.touches.length > 0) return;
 
-        // Reset pinch zoom tracking
-        if (initialPinchDistance > 0) {
-          initialPinchDistance = 0;
+        // Reset scale on pinch end
+        if (this.initialDistance > 0) {
+          const computedScale = parseFloat(this.image.style.transform.replace('scale(', '').replace(')', '')) || 1;
+          this.scale = computedScale;
+          this.initialDistance = 0;
 
           // If scale is close to 1, reset
           if (this.scale < 1.1) {
             this.resetZoom();
+          } else {
+            // Keep zoomed state and adjust wrapper
+            this.imageWrapper.style.width = `${this.image.offsetWidth * this.scale}px`;
+            this.imageWrapper.style.height = `${this.image.offsetHeight * this.scale}px`;
           }
           return;
         }
@@ -251,8 +269,28 @@ class ProductLightbox {
     } else {
       this.scale = 2;
       this.isZoomed = true;
+
+      // Set transform origin based on tap/click position
+      if (e.touches && e.touches.length > 0) {
+        const rect = this.image.getBoundingClientRect();
+        const touchX = e.touches[0].clientX;
+        const touchY = e.touches[0].clientY;
+        const originX = ((touchX - rect.left) / rect.width) * 100;
+        const originY = ((touchY - rect.top) / rect.height) * 100;
+        this.image.style.transformOrigin = `${originX}% ${originY}%`;
+      } else if (e.clientX && e.clientY) {
+        const rect = this.image.getBoundingClientRect();
+        const originX = ((e.clientX - rect.left) / rect.width) * 100;
+        const originY = ((e.clientY - rect.top) / rect.height) * 100;
+        this.image.style.transformOrigin = `${originX}% ${originY}%`;
+      }
+
       this.image.style.transform = `scale(${this.scale})`;
       this.imageWrapper.style.cursor = 'grab';
+
+      // Adjust wrapper to accommodate zoomed size
+      this.imageWrapper.style.width = `${this.image.offsetWidth * this.scale}px`;
+      this.imageWrapper.style.height = `${this.image.offsetHeight * this.scale}px`;
     }
   }
 
@@ -260,7 +298,10 @@ class ProductLightbox {
     this.scale = 1;
     this.isZoomed = false;
     this.image.style.transform = 'scale(1)';
+    this.image.style.transformOrigin = 'center center';
     this.imageWrapper.style.cursor = 'zoom-in';
+    this.imageWrapper.style.width = '';
+    this.imageWrapper.style.height = '';
   }
 
   open(images, startIndex = 0) {
