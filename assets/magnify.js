@@ -125,6 +125,7 @@ class ProductLightbox {
         if (e.touches.length === 2) {
           // Pinch zoom start
           this.initialDistance = this.getDistance(e.touches[0], e.touches[1]);
+<<<<<<< HEAD
           // Calculate center point of pinch
           const rect = this.image.getBoundingClientRect();
           const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
@@ -133,6 +134,8 @@ class ProductLightbox {
           const originX = ((centerX - rect.left) / rect.width) * 100;
           const originY = ((centerY - rect.top) / rect.height) * 100;
           this.image.style.transformOrigin = `${originX}% ${originY}%`;
+=======
+>>>>>>> parent of 5c72f39a (Improve mobile scrolling)
           return;
         }
         touchStartX = e.touches[0].clientX;
@@ -152,12 +155,15 @@ class ProductLightbox {
           const newScale = Math.max(1, Math.min(3, this.scale * (currentDistance / this.initialDistance)));
           this.image.style.transform = `scale(${newScale})`;
           this.isZoomed = newScale > 1;
+<<<<<<< HEAD
 
           // Adjust wrapper to accommodate zoomed size
           if (this.isZoomed) {
             this.imageWrapper.style.width = `${this.image.offsetWidth * newScale}px`;
             this.imageWrapper.style.height = `${this.image.offsetHeight * newScale}px`;
           }
+=======
+>>>>>>> parent of 5c72f39a (Improve mobile scrolling)
           return;
         }
         if (!isSwiping) return;
