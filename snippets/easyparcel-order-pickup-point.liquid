@@ -1,0 +1,237 @@
+<!-- snippets/easyparcel-order-pickup-point.liquid -->
+{%- if order.attributes != blank -%}
+  <div class="easyparcel__pickup_address-wrapper">
+    <h3>Your Nearest Pickup Point:</h3>
+    <ul class="easyparcel__pickup_address">
+      {%- assign pickupName = '' -%}
+      {%- assign pickupAddress1 = '' -%}
+      {%- assign pickupAddress2 = '' -%}
+      {%- assign pickupAddress3 = '' -%}
+      {%- assign pickupPincode = '' -%}
+      {%- assign pickupContact = '' -%}
+
+      {%- for attribute in order.attributes -%}
+        {%- assign attributeFirst = attribute | first -%}
+        {%- unless attributeFirst == 'point_id' or attributeFirst == 'is_pickup_point_required' -%}
+          {%- if attributeFirst == 'point_name' -%}
+          	{%- assign pickupName = attribute | last -%}
+          {%- endif -%}
+      
+          {%- if attributeFirst == 'point_addr1' -%}
+          	{%- assign pickupAddress1 = attribute | last -%}
+          {%- endif -%}
+      
+          {%- if attributeFirst == 'point_addr2' -%}
+          	{%- assign pickupAddress2 = attribute | last -%}
+          {%- endif -%}
+      
+          {%- if attributeFirst == 'point_addr3' -%}
+          	{%- assign pickupAddress3 = attribute | last -%}
+          {%- endif -%}
+      
+          {%- if attributeFirst == 'point_postcode' -%}
+          	{%- assign pickupPincode =  attribute | last -%}
+          {%- endif -%}
+      
+          {%- if attributeFirst == 'point_city' -%}
+          	{%- assign city = attribute | last -%}
+          	{%- assign pickupPincode = pickupPincode | append: ' ' | append: city -%}
+          {%- endif -%}
+      
+          {%- if attributeFirst == 'point_state' -%}
+          	{%- assign state = attribute | last -%}
+          	{%- assign pickupPincode = pickupPincode | append: ' ' | append: state -%}
+          {%- endif -%}
+      
+          {%- if attributeFirst == 'point_contact' -%}
+          	{%- assign pickupContact = attribute | last -%}
+          {%- endif -%}  
+        {%- endunless -%}
+      {%- endfor -%}
+
+      <li><strong>Pickup Point Name</strong>: {{ pickupName }}</li>
+      <li><strong>Contact</strong>: {{ pickupContact }}</li>
+      <li><strong>Address</strong>: {{ pickupAddress1 }}</li>
+      <li>{{ pickupAddress2 }}</li>
+      <li>{{ pickupAddress3 }}</li>
+      <li>{{ pickupPincode }}</li>
+    </ul>
+  </div>
+{%- endif -%}
+
+{%- if order.attributes == blank -%}
+<div id="easyparcel-pickup" class=""></div>
+{%- endif -%}
+
+<style>
+  .easyparcel__pickup_address-wrapper,
+  #easyparcel-pickup {
+    max-width: 1600px;
+    padding-left: calc(20px + (135 - 20) * (100vw - 375px) / (1440 - 375));
+    padding-right: calc(20px + (135 - 20) * (100vw - 375px) / (1440 - 375));
+    margin: 0 auto 30px; }
+  
+  .easyparcel__pickup_address,
+  .easyparcel-pickup-options {
+    margin: 0 0  20px;}
+  
+  .easyparcel__pickup_address{ 
+    list-style: none;
+    padding: 0;}
+  
+  .easyparcel__pickup_address-wrapper h3,
+  .section__title{
+    font-size: calc(24px + (32 - 24) * (100vw - 375px) / (1440 - 375));
+    margin-bottom: 20px; }
+  
+  .easyparcel-pickup-options select{ 
+    width: 320px; }
+  
+  .easyparcel-pickup-options .hidden{ 
+    display: none; }
+  
+  .easyparcel-pickup__button{
+    margin-top: 20px;}
+  
+  .easyparcel-pickup__button button{
+    background-color: #000;
+    color: #fff;
+    border: 0;
+    padding: 1em 4em;
+    cursor: pointer; }
+  
+  .field__input.easyparcel-pickup__points {
+    padding: 0 15px;
+    max-width: 500px; }
+</style>
+
+<script>
+  var orderId = {{ order.id | json }};
+  var storeUrl = "{{ shop.url | remove: 'https://' }}";
+  
+  function getPickupPoints() {
+    fetch('https://shopify-ext.easyparcel.rocks/api/shipping/getPickupPoint/' + orderId + '/' + storeUrl, {
+      method: 'GET'
+    })
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (jsonData) {
+      if(jsonData.success === true && jsonData.data.is_pickup_point_required === true) {
+        generatePickupPointsHtml(jsonData.data);
+      }
+    })
+    .catch(function (err) {
+      console.warn('Something went wrong.', err);
+    });
+  }
+    
+  function generatePickupPointsHtml(data) {
+    var html = '';
+    
+    html += '<div class="section__header">';
+    html += '<h3 class="section__title" id="section-delivery-title">Choose your pick up point</h3>';
+    html += '</div>';
+    
+    html += '<div class="section__content">';
+    html += '<div class="fieldset">';    
+    html += '<div class="field">';
+    html += '<select class="field__input field__input--select easyparcel-pickup__points">';
+      html += '<option value="" selected disabled>Choose an option</option>';
+
+      for(var i=0; i<data.pickup_points.length; i++) {
+        var pickupPoint = data.pickup_points[i];
+        var pickupAddress = pickupPoint.point_addr1 + ', ' + pickupPoint.point_addr2 + ', ' + pickupPoint.point_addr3 + ', ' + pickupPoint.point_city;
+
+        html += `
+		  <option 
+            value="${pickupPoint.point_id}" 
+            data-point-name="${pickupPoint.point_name}"
+			data-point-contact="${pickupPoint.point_contact}"
+            data-point-address1="${pickupPoint.point_addr1}"
+            data-point-address2="${pickupPoint.point_addr2}"
+            data-point-address3="${pickupPoint.point_addr3}"
+            data-point-address4="${pickupPoint.point_addr4}"
+            data-point-postcode="${pickupPoint.point_postcode}"
+            data-point-city="${pickupPoint.point_city}"
+            data-point-state="${pickupPoint.point_state}"
+         >${pickupAddress}</option>`;
+      }
+        
+    html += '</select>'; 
+    html += '</div>';
+    
+    html += '<div class="field hidden easyparcel-pickup__error">';
+    html += '<p>Please choose a valid pickup point</p>'; 
+    html += '</div>';
+    html += '<div class="field hidden easyparcel-pickup__success">';
+    html += '<p>Your pickup point updated successfully!!</p>'; 
+    html += '</div>';
+    
+    html += '</div>';
+    
+    html += '<div class="easyparcel-pickup__button">';
+    html += '<button name="button" type="button" id="easyparcel_button" class="btn">SUBMIT</button>';
+    html += '</div>';    
+    html += '</div>'; 
+    
+    
+    if(!document.querySelector('.easyparcel-pickup')) {
+      var createElement = document.createElement('div');
+      createElement.className = 'section easyparcel-pickup-options';   
+      createElement.innerHTML = html;
+  
+      document.querySelector('#easyparcel-pickup').innerHTML = createElement.innerHTML;
+      attachEventListeners();
+    }
+  }
+  
+  
+  function attachEventListeners() {
+    document.getElementById('easyparcel_button').addEventListener('click', function(event) {
+      event.preventDefault();
+
+      var selectedPickupPoint = document.querySelector('.easyparcel-pickup__points').value;     
+      if(selectedPickupPoint) {
+        document.querySelector('.easyparcel-pickup__error').classList.add('hidden');
+        document.querySelector('.easyparcel-pickup__success').classList.add('hidden');
+        
+        var selectedOption = document.querySelector('.easyparcel-pickup__points').selectedOptions[0];
+        var pickupPointData = {
+          "point_id": selectedPickupPoint,
+          "point_name": selectedOption.dataset.pointName || "",
+          "point_contact": selectedOption.dataset.pointContact || "",
+          "point_addr1": selectedOption.dataset.pointAddress1 || "",
+          "point_addr2": selectedOption.dataset.pointAddress2 || "",
+          "point_addr3": selectedOption.dataset.pointAddress3 || "",
+          "point_addr4": selectedOption.dataset.pointAddress4 || "",
+          "point_postcode": selectedOption.dataset.pointPostcode || "",
+          "point_city": selectedOption.dataset.pointCity || "",
+          "point_state": selectedOption.dataset.pointState || ""
+        }
+
+        fetch('https://shopify-ext.easyparcel.rocks/api/shipping/updatePickupPoint/' + orderId + '/' + storeUrl, {
+          method: 'POST',
+          body: JSON.stringify(pickupPointData),
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (jsonData) {
+          if(jsonData.success === true) {
+            document.querySelector('.easyparcel-pickup__success').classList.remove('hidden');
+            window.location.reload();
+          }
+        })
+      }
+      else {
+        document.querySelector('.easyparcel-pickup__error').classList.remove('hidden');
+      }
+    })
+  }  
+  
+  getPickupPoints();
+</script>
