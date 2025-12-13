@@ -284,7 +284,7 @@
       "type": "featured-collection",
       "name": "Hot Deals",
       "settings": {
-        "collection": "swimming-bath-toys",
+        "collection": "🔥hot-deals🔥",
         "products_to_show": 6,
         "title": "🔥Hot Deals 🔥",
         "heading_size": "h1",
@@ -330,7 +330,7 @@
       "type": "featured-collection",
       "name": "Clearance Stock",
       "settings": {
-        "collection": "sunscreen-tools",
+        "collection": "clearance-collection",
         "products_to_show": 6,
         "title": "🎉Clearance Stock🎉",
         "heading_size": "h1",
