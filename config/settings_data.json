@@ -119,9 +119,10 @@
     "predictive_search_show_vendor": false,
     "predictive_search_show_price": false,
     "currency_code_enabled": false,
-    "cart_type": "notification",
+    "cart_type": "drawer",
     "show_vendor": false,
-    "show_cart_note": false,
+    "show_cart_note": true,
+    "free_shipping_threshold": 150,
     "cart_drawer_collection": "",
     "sections": {
       "main-password-header": {
@@ -402,9 +403,10 @@
       "predictive_search_show_vendor": false,
       "predictive_search_show_price": false,
       "currency_code_enabled": true,
-      "cart_type": "notification",
+      "cart_type": "drawer",
       "show_vendor": false,
-      "show_cart_note": false,
+      "show_cart_note": true,
+      "free_shipping_threshold": 150,
       "cart_drawer_collection": "",
       "sections": {
         "main-password-header": {

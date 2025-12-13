@@ -8,11 +8,15 @@ if (!customElements.get('product-form')) {
         this.form = this.querySelector('form');
         this.variantIdInput.disabled = false;
         this.form.addEventListener('submit', this.onSubmitHandler.bind(this));
-        this.cart = document.querySelector('cart-notification') || document.querySelector('cart-drawer');
+        this.cart =
+          document.querySelector('cart-notification') ||
+          document.querySelector('cart-drawer') ||
+          document.querySelector('cart-drawer-modern');
         this.submitButton = this.querySelector('[type="submit"]');
         this.submitButtonText = this.submitButton.querySelector('span');
 
-        if (document.querySelector('cart-drawer')) this.submitButton.setAttribute('aria-haspopup', 'dialog');
+        if (document.querySelector('cart-drawer') || document.querySelector('cart-drawer-modern'))
+          this.submitButton.setAttribute('aria-haspopup', 'dialog');
 
         this.hideErrors = this.dataset.hideErrors === 'true';
       }
@@ -82,7 +86,7 @@ if (!customElements.get('product-form')) {
                 'modalClosed',
                 () => {
                   setTimeout(() => {
-                    CartPerformance.measure("add:paint-updated-sections", () => {
+                    CartPerformance.measure('add:paint-updated-sections', () => {
                       this.cart.renderContents(response);
                     });
                   });
@@ -91,7 +95,7 @@ if (!customElements.get('product-form')) {
               );
               quickAddModal.hide(true);
             } else {
-              CartPerformance.measure("add:paint-updated-sections", () => {
+              CartPerformance.measure('add:paint-updated-sections', () => {
                 this.cart.renderContents(response);
               });
             }
@@ -105,7 +109,7 @@ if (!customElements.get('product-form')) {
             if (!this.error) this.submitButton.removeAttribute('aria-disabled');
             this.querySelector('.loading__spinner').classList.add('hidden');
 
-            CartPerformance.measureFromEvent("add:user-action", evt);
+            CartPerformance.measureFromEvent('add:user-action', evt);
           });
       }
 
