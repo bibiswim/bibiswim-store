@@ -220,16 +220,16 @@
           "type": "category",
           "settings": {
             "icon": "shopify://shop_images/BEACH_HAT.webp",
-            "title": "Beach",
-            "link": "shopify://collections/beach-tools"
+            "title": "Sunscreen",
+            "link": "shopify://collections/sunscreen-tools"
           }
         },
         "category_kUDrQ3": {
           "type": "category",
           "settings": {
-            "icon": "shopify://shop_images/TOWEL.webp",
-            "title": "Sunscreen",
-            "link": "shopify://collections/sunscreen-tools"
+            "icon": "shopify://shop_images/Categories-Other.webp",
+            "title": "Other",
+            "link": "shopify://collections/🛠️other🛠️"
           }
         }
       },
