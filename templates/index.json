@@ -32,7 +32,7 @@
           "type": "link",
           "name": "Muslimah",
           "settings": {
-            "label": "Muslimah",
+            "label": "ADULT",
             "link": "shopify://collections/lady-swimwear"
           }
         },
@@ -48,7 +48,7 @@
           "type": "link",
           "name": "Bath Toys",
           "settings": {
-            "label": "Bath Toys",
+            "label": "BaBY Toys",
             "link": "shopify://collections/swimming-bath-toys"
           }
         },
