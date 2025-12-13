@@ -171,28 +171,20 @@
         "category_bPXBMh": {
           "type": "category",
           "settings": {
-            "icon": "shopify://shop_images/Categories-Goggles.webp",
-            "title": "Goggles",
-            "link": "shopify://collections/swimming-goggles"
-          }
-        },
-        "category_yWR4Tc": {
-          "type": "category",
-          "settings": {
             "icon": "shopify://shop_images/Categories-Swimhat.webp",
             "title": "SwimCap",
             "link": "shopify://collections/swimming-cap"
           }
         },
-        "category_rhrWta": {
+        "category_yWR4Tc": {
           "type": "category",
           "settings": {
-            "icon": "shopify://shop_images/width_200_1.webp",
-            "title": "SwimToys",
-            "link": "shopify://collections/swimming-bath-toys"
+            "icon": "shopify://shop_images/Categories-Goggles.webp",
+            "title": "Goggles",
+            "link": "shopify://collections/swimming-goggles"
           }
         },
-        "category_ychJKq": {
+        "category_rhrWta": {
           "type": "category",
           "settings": {
             "icon": "shopify://shop_images/Categories-SwimRing.webp",
@@ -200,11 +192,19 @@
             "link": "shopify://collections/swimming-floaties"
           }
         },
+        "category_ychJKq": {
+          "type": "category",
+          "settings": {
+            "icon": "shopify://shop_images/SWIMSHOES.webp",
+            "title": "SwimShoes",
+            "link": "shopify://collections/swimming-shoes"
+          }
+        },
         "category_TJBHx4": {
           "type": "category",
           "settings": {
-            "icon": "shopify://shop_images/Categories-Toys.webp",
-            "title": "Toys",
+            "icon": "shopify://shop_images/WATERGUN.webp",
+            "title": "BabyToys",
             "link": "shopify://collections/swimming-bath-toys"
           }
         },
