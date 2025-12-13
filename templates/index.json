@@ -219,17 +219,17 @@
         "category_MPLK7F": {
           "type": "category",
           "settings": {
-            "icon": "shopify://shop_images/Categories-Accessories.webp",
-            "title": "Accessories",
-            "link": "shopify://collections/swimming-shoes"
+            "icon": "shopify://shop_images/BEACH_HAT.webp",
+            "title": "Beach",
+            "link": "shopify://collections/beach-tools"
           }
         },
         "category_kUDrQ3": {
           "type": "category",
           "settings": {
-            "icon": "shopify://shop_images/Categories-Other.webp",
-            "title": "Other",
-            "link": ""
+            "icon": "shopify://shop_images/TOWEL.webp",
+            "title": "Sunscreen",
+            "link": "shopify://collections/sunscreen-tools"
           }
         }
       },
