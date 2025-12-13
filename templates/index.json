@@ -16,7 +16,7 @@
           "type": "link",
           "name": "Boy",
           "settings": {
-            "label": "BOY",
+            "label": "KIDS",
             "link": "shopify://collections/boy-swimsuit"
           }
         },
@@ -24,48 +24,48 @@
           "type": "link",
           "name": "Girl",
           "settings": {
-            "label": "Girl",
-            "link": "shopify://collections/girl-swimsuit"
+            "label": "ADULT",
+            "link": "shopify://collections/lady-swimwear"
           }
         },
         "link_egVNqz": {
           "type": "link",
           "name": "Muslimah",
           "settings": {
-            "label": "Adult",
-            "link": "shopify://collections/lady-swimwear"
+            "label": "SWIMCAP",
+            "link": "shopify://collections/swimming-cap"
           }
         },
         "link_x63mzV": {
           "type": "link",
           "name": "Sunscreen",
           "settings": {
-            "label": "Sunscreen",
-            "link": "shopify://collections/sunscreen-tools"
+            "label": "GOGGLES",
+            "link": "shopify://collections/swimming-goggles"
           }
         },
         "link_x77ewB": {
           "type": "link",
           "name": "Bath Toys",
           "settings": {
-            "label": "Baby Toys",
-            "link": "shopify://collections/swimming-bath-toys"
+            "label": "SWIMRING",
+            "link": "shopify://collections/swimming-floaties"
           }
         },
         "link_X4AV88": {
           "type": "link",
           "name": "Goggles",
           "settings": {
-            "label": "Goggles",
-            "link": "shopify://collections/swimming-goggles"
+            "label": "SWIMSHOES",
+            "link": "shopify://collections/swimming-shoes"
           }
         },
         "link_xYjHiA": {
           "type": "link",
           "name": "SwimCap",
           "settings": {
-            "label": "SwimCap",
-            "link": "shopify://collections/swimming-cap"
+            "label": "BABY TOYS",
+            "link": "shopify://collections/swimming-bath-toys"
           }
         }
       },
