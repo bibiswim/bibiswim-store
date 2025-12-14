@@ -139,6 +139,23 @@
         "accessibility_info": "Slideshow about our brand"
       }
     },
+    "image_banner_VWBAiQ": {
+      "type": "image-banner",
+      "name": "t:sections.image-banner.presets.name",
+      "settings": {
+        "image": "shopify://shop_images/BIBISWIM_Collection_1.png",
+        "image_overlay_opacity": 0,
+        "image_height": "adapt",
+        "image_behavior": "none",
+        "desktop_content_position": "middle-center",
+        "desktop_content_alignment": "center",
+        "show_text_box": true,
+        "color_scheme": "",
+        "stack_images_on_mobile": true,
+        "mobile_content_alignment": "center",
+        "show_text_below": true
+      }
+    },
     "image_banner": {
       "type": "image-banner",
       "disabled": true,
@@ -427,6 +444,7 @@
   },
   "order": [
     "top_navigation_RKYUxD",
+    "image_banner_VWBAiQ",
     "slideshow_qKqtq6",
     "image_banner",
     "category_navigation_FTCb79",
