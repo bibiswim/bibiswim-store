@@ -106,7 +106,7 @@
         "slide_nYLeWF": {
           "type": "slide",
           "settings": {
-            "image": "shopify://shop_images/Website_Main_Banner_2560x1240_325e0971-4609-4333-aede-79e5d87bfac0.webp",
+            "image": "shopify://shop_images/Untitled_design_1.png",
             "image_overlay_opacity": 0,
             "heading": "",
             "heading_size": "h1",
@@ -148,11 +148,11 @@
       "settings": {
         "layout": "full_bleed",
         "slide_height": "adapt_image",
-        "slider_visual": "counter",
+        "slider_visual": "dots",
         "auto_rotate": true,
         "change_slides_speed": 5,
         "image_behavior": "none",
-        "show_text_below": true,
+        "show_text_below": false,
         "accessibility_info": "Slideshow about our brand"
       }
     },
