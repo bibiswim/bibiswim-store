@@ -20,9 +20,33 @@ class CartDrawerModern extends HTMLElement {
     this.isUpdating = false;
     this.activeElement = null;
     this.eventsBound = false;
+    this.cartUpdateUnsubscriber = undefined;
 
     this.bindEvents();
     this.setupHeaderCartIcon();
+    this.setupPubSubSubscription();
+  }
+
+  // Subscribe to PubSub cart updates for sync with cart page
+  setupPubSubSubscription() {
+    // Only subscribe if PubSub is available (Shopify's pubsub.js)
+    if (typeof subscribe === 'function' && typeof PUB_SUB_EVENTS !== 'undefined') {
+      this.cartUpdateUnsubscriber = subscribe(PUB_SUB_EVENTS.cartUpdate, (event) => {
+        // Don't respond to our own updates to prevent loops
+        if (event.source === 'cart-drawer-modern') {
+          return;
+        }
+        // Refresh drawer to sync with cart page changes
+        this.refreshDrawer();
+      });
+    }
+  }
+
+  disconnectedCallback() {
+    // Clean up subscription when element is removed
+    if (this.cartUpdateUnsubscriber) {
+      this.cartUpdateUnsubscriber();
+    }
   }
 
   // Required for compatibility with product-form.js
@@ -41,7 +65,7 @@ class CartDrawerModern extends HTMLElement {
       {
         id: 'cart-icon-bubble',
         section: 'cart-icon-bubble',
-        selector: '.shopify-section',
+        selector: '#shopify-section-cart-icon-bubble',
       },
     ];
   }
@@ -49,6 +73,15 @@ class CartDrawerModern extends HTMLElement {
   // Required for compatibility with product-form.js
   renderContents(parsedState) {
     this.getSectionsToRender().forEach((section) => {
+      // Handle cart-icon-bubble specially since it's in the header
+      if (section.id === 'cart-icon-bubble') {
+        const sectionElement = document.querySelector(section.selector) || document.getElementById(section.id);
+        if (sectionElement && parsedState.sections && parsedState.sections[section.id]) {
+          sectionElement.innerHTML = parsedState.sections[section.id];
+        }
+        return;
+      }
+      
       const sectionElement = section.selector
         ? document.querySelector(section.selector)
         : document.getElementById(section.id);
@@ -180,10 +213,11 @@ class CartDrawerModern extends HTMLElement {
     e.preventDefault();
 
     const submitBtn = form.querySelector('.cart-drawer-modern__recommendation-add');
-    const originalText = submitBtn.textContent;
+    const originalHTML = submitBtn.innerHTML;
 
     submitBtn.disabled = true;
-    submitBtn.textContent = 'ADDING...';
+    // Show a loading spinner for the icon button
+    submitBtn.innerHTML = '<span class="cart-drawer-modern__spinner-small"></span>';
     this.showLoading();
 
     try {
@@ -207,11 +241,15 @@ class CartDrawerModern extends HTMLElement {
       const cartResponse = await fetch('/cart.js');
       const cart = await cartResponse.json();
       this.updateHeaderCartCount(cart.item_count);
+      
+      // Dispatch events for cross-component synchronization
+      this.dispatchCartUpdatedEvents(cart);
     } catch (error) {
       console.error('Error adding item:', error);
-      submitBtn.textContent = 'ERROR';
+      // Show error state briefly, then restore original button
+      submitBtn.innerHTML = '<span style="font-size:0.6rem">ERROR</span>';
       setTimeout(() => {
-        submitBtn.textContent = originalText;
+        submitBtn.innerHTML = originalHTML;
         submitBtn.disabled = false;
       }, 2000);
     } finally {
@@ -384,6 +422,9 @@ class CartDrawerModern extends HTMLElement {
 
       // Update header cart icon
       this.updateHeaderCartCount(cart.item_count);
+      
+      // Dispatch events for cross-component synchronization
+      this.dispatchCartUpdatedEvents(cart);
     } catch (error) {
       console.error('Error removing item:', error);
       itemEl?.classList.remove('is-loading');
@@ -430,6 +471,9 @@ class CartDrawerModern extends HTMLElement {
       const cart = await response.json();
       this.updateCartUI(cart);
       this.updateHeaderCartCount(cart.item_count);
+      
+      // Dispatch events for cross-component synchronization
+      this.dispatchCartUpdatedEvents(cart);
     } catch (error) {
       console.error('Error updating quantity:', error);
       // Refresh drawer to restore correct state
@@ -437,6 +481,22 @@ class CartDrawerModern extends HTMLElement {
     } finally {
       itemEl?.classList.remove('is-loading');
       this.hideLoading();
+    }
+  }
+
+  // Dispatch events to sync cart state across all components
+  dispatchCartUpdatedEvents(cart) {
+    // Dispatch custom event for other components listening
+    document.dispatchEvent(new CustomEvent('cart:updated', { 
+      detail: { cart, source: 'cart-drawer-modern' }
+    }));
+    
+    // Publish to PubSub system if available (syncs with cart page)
+    if (typeof publish === 'function' && typeof PUB_SUB_EVENTS !== 'undefined') {
+      publish(PUB_SUB_EVENTS.cartUpdate, {
+        source: 'cart-drawer-modern',
+        cartData: cart
+      });
     }
   }
 
@@ -541,24 +601,25 @@ class CartDrawerModern extends HTMLElement {
     const cartIcon = document.querySelector('#cart-icon-bubble');
     if (!cartIcon) return;
 
-    const countBubble = cartIcon.querySelector('.cart-count-bubble');
-    if (countBubble) {
-      if (count > 0) {
-        countBubble.innerHTML = `
-          <span aria-hidden="true">${count < 100 ? count : '99+'}</span>
-          <span class="visually-hidden">${count} items</span>
-        `;
-        countBubble.style.display = '';
-      } else {
-        countBubble.style.display = 'none';
+    let countBubble = cartIcon.querySelector('.cart-count-bubble');
+    
+    if (count > 0) {
+      // Create bubble if it doesn't exist (e.g., cart was empty before)
+      if (!countBubble) {
+        countBubble = document.createElement('div');
+        countBubble.className = 'cart-count-bubble';
+        cartIcon.appendChild(countBubble);
       }
-    }
-
-    // Update cart icon (full/empty)
-    const iconWrapper = cartIcon.querySelector('.svg-wrapper');
-    if (iconWrapper) {
-      // This would require having both icons available
-      // For now, we'll just update the count
+      
+      countBubble.innerHTML = `
+        <span aria-hidden="true">${count < 100 ? count : '99+'}</span>
+        <span class="visually-hidden">${count} items</span>
+      `;
+      countBubble.style.display = '';
+      countBubble.removeAttribute('hidden');
+    } else if (countBubble) {
+      // Remove bubble completely when cart is empty
+      countBubble.remove();
     }
   }
 
@@ -695,10 +756,11 @@ function loadRecentlyViewedProducts() {
         <button 
           type="submit" 
           name="add" 
-          class="cart-drawer-modern__recommendation-add"
+          class="cart-drawer-modern__recommendation-add cart-drawer-modern__recommendation-add--icon"
+          aria-label="Add ${product.title} to cart"
           ${!product.available ? 'disabled' : ''}
         >
-          ${product.available ? 'ADD' : 'SOLD OUT'}
+          ${product.available ? '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>' : '<span class="sold-out-text">SOLD OUT</span>'}
         </button>
       </form>
     </div>

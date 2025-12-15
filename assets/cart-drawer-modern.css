@@ -866,7 +866,11 @@
 }
 
 .cart-drawer-modern__recommendation-form {
-  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .cart-drawer-modern__recommendation-add {
@@ -892,6 +896,54 @@
 .cart-drawer-modern__recommendation-add:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Plus icon circle button style for Recently Viewed */
+.cart-drawer-modern__recommendation-add--icon {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(var(--color-foreground), 0.2);
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cart-drawer-modern__recommendation-add--icon svg {
+  width: 20px;
+  height: 20px;
+  stroke: rgb(var(--color-foreground));
+  transition: stroke 0.2s ease;
+}
+
+.cart-drawer-modern__recommendation-add--icon:hover:not(:disabled) {
+  background-color: rgb(var(--color-button));
+  border-color: rgb(var(--color-button));
+}
+
+.cart-drawer-modern__recommendation-add--icon:hover:not(:disabled) svg {
+  stroke: rgb(var(--color-button-text));
+}
+
+.cart-drawer-modern__recommendation-add--icon .sold-out-text {
+  font-size: 0.5rem;
+  line-height: 1;
+  text-align: center;
+}
+
+/* Small spinner for icon button loading state */
+.cart-drawer-modern__spinner-small {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(var(--color-foreground), 0.2);
+  border-top-color: rgb(var(--color-foreground));
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
 /* ============================================
