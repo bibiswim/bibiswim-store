@@ -1445,7 +1445,7 @@
         "max": 500,
         "step": 10,
         "unit": "$",
-        "default": 150,
+        "default": 200,
         "label": "Free shipping threshold",
         "info": "Set to 0 to disable the progress bar. Customers will see how much more they need to spend for free shipping."
       },

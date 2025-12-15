@@ -15,7 +15,7 @@
 <script src="{{ 'cart.js' | asset_url }}" defer="defer"></script>
 
 {%- liquid
-  assign free_shipping_threshold = settings.free_shipping_threshold | default: 150
+  assign free_shipping_threshold = settings.free_shipping_threshold | default: 200
   assign free_shipping_threshold_cents = free_shipping_threshold | times: 100
   assign cart_total_cents = cart.total_price
   assign remaining_cents = free_shipping_threshold_cents | minus: cart_total_cents
@@ -33,29 +33,7 @@
   assign currency_code = cart.currency.iso_code
 -%}
 
-{%- comment -%} Build fallback collection products JSON {%- endcomment -%}
-{%- capture fallback_products_json -%}
-[
-  {%- if fallback_collection != blank -%}
-    {%- for product in fallback_collection.products limit: 4 -%}
-      {
-        "id": {{ product.id | json }},
-        "title": {{ product.title | json }},
-        "url": {{ product.url | json }},
-        "image": {{ product.featured_image | image_url: width: 200 | json }},
-        "price": {{ product.price | money | remove: ' ' | remove: currency_code | json }},
-        "variantId": {{ product.selected_or_first_available_variant.id | json }},
-        "variantTitle": {{ product.selected_or_first_available_variant.title | json }},
-        "variantOptions": {{ product.selected_or_first_available_variant.options | json }},
-        "quantity": 1,
-        "available": {{ product.available | json }}
-      }{%- unless forloop.last -%},{%- endunless -%}
-    {%- endfor -%}
-  {%- endif -%}
-]
-{%- endcapture -%}
-
-<cart-drawer-modern class="cart-drawer-modern{% if cart == empty %} is-empty{% endif %}" id="CartDrawerModern" data-money-format="{{ shop.money_format }}" data-currency-code="{{ currency_code }}" data-fallback-products="{{ fallback_products_json | strip_newlines | escape }}">
+<cart-drawer-modern class="cart-drawer-modern{% if cart == empty %} is-empty{% endif %}" id="CartDrawerModern" data-money-format="{{ shop.money_format }}" data-currency-code="{{ currency_code }}">
   <!-- Overlay -->
   <div class="cart-drawer-modern__overlay" data-cart-drawer-overlay></div>
 
@@ -89,27 +67,6 @@
     </header>
 
     {%- if cart != empty -%}
-      <!-- Free Shipping Progress -->
-      {%- if free_shipping_threshold > 0 -%}
-        <div class="cart-drawer-modern__shipping-progress" data-shipping-progress data-threshold="{{ free_shipping_threshold_cents }}">
-          {%- if remaining_cents > 0 -%}
-            <p class="cart-drawer-modern__shipping-text">
-              Spend <strong>{{ remaining_cents | money | remove: ' ' | remove: currency_code }}</strong> more for FREE shipping!
-            </p>
-          {%- else -%}
-            <p class="cart-drawer-modern__shipping-success">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              You've unlocked FREE shipping!
-            </p>
-          {%- endif -%}
-          <div class="cart-drawer-modern__progress-bar">
-            <div class="cart-drawer-modern__progress-fill" style="width: {{ shipping_progress }}%"></div>
-          </div>
-        </div>
-      {%- endif -%}
-
       <!-- Cart Items -->
       <div class="cart-drawer-modern__items" data-cart-items>
         <form action="{{ routes.cart_url }}" method="post" id="CartDrawerModernForm">
@@ -240,6 +197,27 @@
           {%- endfor -%}
         </form>
       </div>
+
+      <!-- Free Shipping Progress -->
+      {%- if free_shipping_threshold > 0 -%}
+        <div class="cart-drawer-modern__shipping-progress" data-shipping-progress data-threshold="{{ free_shipping_threshold_cents }}">
+          {%- if remaining_cents > 0 -%}
+            <p class="cart-drawer-modern__shipping-text">
+              Spend <strong>{{ remaining_cents | money | remove: ' ' | remove: currency_code }}</strong> more for FREE shipping!
+            </p>
+          {%- else -%}
+            <p class="cart-drawer-modern__shipping-success">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              You've unlocked FREE shipping!
+            </p>
+          {%- endif -%}
+          <div class="cart-drawer-modern__progress-bar">
+            <div class="cart-drawer-modern__progress-fill" style="width: {{ shipping_progress }}%"></div>
+          </div>
+        </div>
+      {%- endif -%}
 
       <!-- Footer -->
       <footer class="cart-drawer-modern__footer">

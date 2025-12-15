@@ -706,7 +706,6 @@
   justify-content: center;
   padding: 60px 24px 40px;
   text-align: center;
-  border-bottom: 1px solid rgba(var(--color-foreground), 0.08);
 }
 
 .cart-drawer-modern__empty-icon {
@@ -754,16 +753,17 @@
    ============================================ */
 
 .cart-drawer-modern__recommendations {
+  border-top: 1px solid rgba(var(--color-foreground), 0.08);
   padding: 0;
   flex: 1;
+  width: 100%;
 }
 
 .cart-drawer-modern__recommendations-title {
-  font-size: 1rem;
+  font-size: 1.5rem;
   font-weight: 500;
   color: rgb(var(--color-foreground));
   margin-bottom: 16px;
-  padding: 0 20px;
   text-transform: none;
   letter-spacing: 0;
 }
@@ -771,8 +771,6 @@
 .cart-drawer-modern__recommendations-list {
   display: flex;
   flex-direction: column;
-  gap: 0;
-  padding: 0 20px;
 }
 
 .cart-drawer-modern__recommendation-item {

@@ -609,35 +609,20 @@ document.addEventListener('cart:updated', () => {
 function loadRecentlyViewedProducts() {
   const recentlyViewedContainer = document.getElementById('cart-recently-viewed');
   const recommendationsList = document.getElementById('cart-recommendations');
-  const cartDrawer = document.querySelector('cart-drawer-modern');
 
   if (!recentlyViewedContainer || !recommendationsList) return;
 
   // Get recently viewed products from localStorage
   const recentlyViewed = JSON.parse(localStorage.getItem('recently_viewed_products') || '[]');
 
-  let productsToShow = [];
-
-  // Use recently viewed if available, otherwise use fallback collection
-  if (recentlyViewed.length > 0) {
-    productsToShow = recentlyViewed.slice(0, 4);
-  } else if (cartDrawer && cartDrawer.dataset.fallbackProducts) {
-    // Use fallback collection products
-    try {
-      const fallbackProducts = JSON.parse(cartDrawer.dataset.fallbackProducts);
-      productsToShow = fallbackProducts.slice(0, 4);
-    } catch (e) {
-      console.error('Error parsing fallback products:', e);
-    }
-  }
-
-  // Hide container if no products to show
-  if (productsToShow.length === 0) {
+  // Hide container if no recently viewed products
+  if (recentlyViewed.length === 0) {
     recentlyViewedContainer.style.display = 'none';
     return;
   }
 
-  // Show the container
+  // Show the container with recently viewed products
+  const productsToShow = recentlyViewed.slice(0, 4);
   recentlyViewedContainer.style.display = 'block';
 
   // Build HTML for each product with variant and quantity info
