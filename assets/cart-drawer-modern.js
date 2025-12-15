@@ -19,6 +19,7 @@ class CartDrawerModern extends HTMLElement {
     this.isOpen = false;
     this.isUpdating = false;
     this.activeElement = null;
+    this.eventsBound = false;
 
     this.bindEvents();
     this.setupHeaderCartIcon();
@@ -71,24 +72,8 @@ class CartDrawerModern extends HTMLElement {
   }
 
   rebindAfterRender() {
-    this.overlay = this.querySelector('[data-cart-drawer-overlay]');
-    this.closeButtons = this.querySelectorAll('[data-cart-drawer-close]');
-    this.loadingOverlay = this.querySelector('[data-cart-loading]');
-    this.itemsContainer = this.querySelector('[data-cart-items]');
-    this.cartCountEl = this.querySelector('[data-cart-count]');
-    this.subtotalEl = this.querySelector('[data-cart-subtotal]');
-    this.shippingProgressEl = this.querySelector('[data-shipping-progress]');
-
-    // Re-bind close buttons
-    this.closeButtons.forEach((btn) => {
-      btn.addEventListener('click', () => this.close());
-    });
-
-    // Re-bind overlay click
-    this.overlay?.addEventListener('click', () => this.close());
-
-    // Re-bind recommendation forms
-    this.bindRecommendationForms();
+    // Re-query and rebind non-delegated events
+    this.rebindNonDelegatedEvents();
 
     // Check empty state
     const itemsForm = this.querySelector('#CartDrawerModernForm');
@@ -100,87 +85,113 @@ class CartDrawerModern extends HTMLElement {
   }
 
   bindEvents() {
-    // Close drawer events
-    this.overlay?.addEventListener('click', () => this.close());
-    this.closeButtons.forEach((btn) => {
-      btn.addEventListener('click', () => this.close());
-    });
+    // Prevent duplicate event binding for delegated events
+    if (this.eventsBound) {
+      // Only rebind non-delegated events after refresh
+      this.rebindNonDelegatedEvents();
+      return;
+    }
+    this.eventsBound = true;
 
-    // Escape key to close
+    // Close drawer events (non-delegated, will be rebound)
+    this.rebindNonDelegatedEvents();
+
+    // Escape key to close (only bind once)
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && this.isOpen) {
         this.close();
       }
     });
 
-    // Quantity buttons
+    // Quantity buttons - delegated event (only bind once)
     this.addEventListener('click', (e) => {
       const minusBtn = e.target.closest('[data-quantity-minus]');
       const plusBtn = e.target.closest('[data-quantity-plus]');
       const removeBtn = e.target.closest('[data-remove-item]');
 
       if (minusBtn) {
+        e.preventDefault();
         this.handleQuantityChange(minusBtn, -1);
       } else if (plusBtn) {
+        e.preventDefault();
         this.handleQuantityChange(plusBtn, 1);
       } else if (removeBtn) {
+        e.preventDefault();
         this.handleRemoveItem(removeBtn);
       }
     });
 
-    // Quantity input change
+    // Quantity input change - delegated event (only bind once)
     this.addEventListener('change', (e) => {
       if (e.target.matches('[data-quantity-input]')) {
         this.handleQuantityInput(e.target);
       }
     });
 
-    // Cart note toggle
-    const noteToggle = this.querySelector('[data-cart-note-toggle]');
-    noteToggle?.addEventListener('click', () => {
-      const wrapper = this.querySelector('[data-cart-note-wrapper]');
-      wrapper?.classList.toggle('is-open');
+    // Cart note toggle - delegated
+    this.addEventListener('click', (e) => {
+      const noteToggle = e.target.closest('[data-cart-note-toggle]');
+      if (noteToggle) {
+        const wrapper = this.querySelector('[data-cart-note-wrapper]');
+        wrapper?.classList.toggle('is-open');
+      }
     });
 
-    // Cart note save (debounced)
-    const noteTextarea = this.querySelector('[data-cart-note]');
-    if (noteTextarea) {
-      let noteTimeout;
-      noteTextarea.addEventListener('input', () => {
+    // Cart note save (delegated with debounce)
+    let noteTimeout;
+    this.addEventListener('input', (e) => {
+      if (e.target.matches('[data-cart-note]')) {
         clearTimeout(noteTimeout);
         noteTimeout = setTimeout(() => {
-          this.updateCartNote(noteTextarea.value);
+          this.updateCartNote(e.target.value);
         }, 500);
-      });
-    }
+      }
+    });
 
-    // Recommendation add to cart forms
-    this.bindRecommendationForms();
+    // Recommendation forms - delegated
+    this.addEventListener('submit', (e) => {
+      const form = e.target.closest('.cart-drawer-modern__recommendation-form');
+      if (form) {
+        this.handleRecommendationSubmit(e, form);
+      }
+    });
   }
 
-  bindRecommendationForms() {
-    const recommendationForms = this.querySelectorAll('.cart-drawer-modern__recommendation-form');
-    recommendationForms.forEach((form) => {
-      form.addEventListener('submit', (e) => this.handleRecommendationSubmit(e, form));
+  rebindNonDelegatedEvents() {
+    // Re-query elements
+    this.overlay = this.querySelector('[data-cart-drawer-overlay]');
+    this.closeButtons = this.querySelectorAll('[data-cart-drawer-close]');
+    this.loadingOverlay = this.querySelector('[data-cart-loading]');
+    this.itemsContainer = this.querySelector('[data-cart-items]');
+    this.cartCountEl = this.querySelector('[data-cart-count]');
+    this.subtotalEl = this.querySelector('[data-cart-subtotal]');
+    this.shippingProgressEl = this.querySelector('[data-shipping-progress]');
+
+    // Close button events
+    this.closeButtons.forEach((btn) => {
+      btn.addEventListener('click', () => this.close());
     });
+
+    // Overlay click
+    this.overlay?.addEventListener('click', () => this.close());
   }
 
   async handleRecommendationSubmit(e, form) {
     e.preventDefault();
-    
+
     const submitBtn = form.querySelector('.cart-drawer-modern__recommendation-add');
     const originalText = submitBtn.textContent;
-    
+
     submitBtn.disabled = true;
     submitBtn.textContent = 'ADDING...';
     this.showLoading();
 
     try {
       const formData = new FormData(form);
-      
+
       const response = await fetch('/cart/add.js', {
         method: 'POST',
-        body: formData
+        body: formData,
       });
 
       if (!response.ok) {
@@ -188,15 +199,14 @@ class CartDrawerModern extends HTMLElement {
       }
 
       const item = await response.json();
-      
+
       // Refresh the drawer to show the new item
       await this.refreshDrawer();
-      
+
       // Update header cart count
       const cartResponse = await fetch('/cart.js');
       const cart = await cartResponse.json();
       this.updateHeaderCartCount(cart.item_count);
-
     } catch (error) {
       console.error('Error adding item:', error);
       submitBtn.textContent = 'ERROR';
@@ -295,10 +305,18 @@ class CartDrawerModern extends HTMLElement {
 
     if (!input) return;
 
+    // Prevent the change event from also firing when we update the input
+    input.dataset.skipChange = 'true';
+
     const currentQty = parseInt(input.value);
     const newQty = Math.max(0, currentQty + change);
 
     input.value = newQty;
+
+    // Clear the flag after a short delay
+    setTimeout(() => {
+      delete input.dataset.skipChange;
+    }, 100);
 
     if (newQty === 0) {
       this.removeItem(line, itemEl);
@@ -309,6 +327,11 @@ class CartDrawerModern extends HTMLElement {
 
   async handleQuantityInput(input) {
     if (this.isUpdating) return;
+
+    // Skip if this change was triggered by a button click
+    if (input.dataset.skipChange === 'true') {
+      return;
+    }
 
     const line = parseInt(input.dataset.line);
     const itemEl = input.closest('[data-cart-item]');
@@ -370,6 +393,7 @@ class CartDrawerModern extends HTMLElement {
   }
 
   async updateQuantity(line, quantity, itemEl) {
+    this.showLoading();
     itemEl?.classList.add('is-loading');
 
     // Update minus button state
@@ -397,6 +421,7 @@ class CartDrawerModern extends HTMLElement {
       console.error('Error updating quantity:', error);
     } finally {
       itemEl?.classList.remove('is-loading');
+      this.hideLoading();
     }
   }
 
@@ -447,6 +472,9 @@ class CartDrawerModern extends HTMLElement {
   }
 
   updateShippingProgress(totalPrice) {
+    // Re-query the element in case DOM was updated
+    this.shippingProgressEl = this.querySelector('[data-shipping-progress]');
+
     if (!this.shippingProgressEl) return;
 
     const threshold = parseInt(this.shippingProgressEl.dataset.threshold) || 15000; // Default $150.00 in cents
@@ -508,9 +536,29 @@ class CartDrawerModern extends HTMLElement {
   }
 
   formatMoney(cents) {
-    // Simple money formatting - adjust for your currency
+    // Use store's money format from data attribute
+    const moneyFormat = this.dataset.moneyFormat || '{{amount}}';
+    const currencyCode = this.dataset.currencyCode || '';
     const amount = (cents / 100).toFixed(2);
-    return `$${amount}`;
+
+    // Replace Shopify money format placeholders
+    let formatted = moneyFormat
+      .replace('{{amount}}', amount)
+      .replace('{{amount_no_decimals}}', Math.round(cents / 100))
+      .replace('{{amount_with_comma_separator}}', amount.replace('.', ','))
+      .replace(
+        '{{amount_no_decimals_with_comma_separator}}',
+        Math.round(cents / 100)
+          .toString()
+          .replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+      );
+
+    // Remove trailing currency code (e.g., " MYR", " USD")
+    if (currencyCode) {
+      formatted = formatted.replace(new RegExp('\\s*' + currencyCode + '\\s*$', 'i'), '');
+    }
+
+    return formatted;
   }
 
   async refreshDrawer() {
@@ -556,3 +604,109 @@ document.addEventListener('cart:updated', () => {
     drawer.onCartUpdated();
   }
 });
+
+// Recently Viewed Products - Load from localStorage
+function loadRecentlyViewedProducts() {
+  const recentlyViewedContainer = document.getElementById('cart-recently-viewed');
+  const recommendationsList = document.getElementById('cart-recommendations');
+  const cartDrawer = document.querySelector('cart-drawer-modern');
+
+  if (!recentlyViewedContainer || !recommendationsList) return;
+
+  // Get recently viewed products from localStorage
+  const recentlyViewed = JSON.parse(localStorage.getItem('recently_viewed_products') || '[]');
+
+  let productsToShow = [];
+
+  // Use recently viewed if available, otherwise use fallback collection
+  if (recentlyViewed.length > 0) {
+    productsToShow = recentlyViewed.slice(0, 4);
+  } else if (cartDrawer && cartDrawer.dataset.fallbackProducts) {
+    // Use fallback collection products
+    try {
+      const fallbackProducts = JSON.parse(cartDrawer.dataset.fallbackProducts);
+      productsToShow = fallbackProducts.slice(0, 4);
+    } catch (e) {
+      console.error('Error parsing fallback products:', e);
+    }
+  }
+
+  // Hide container if no products to show
+  if (productsToShow.length === 0) {
+    recentlyViewedContainer.style.display = 'none';
+    return;
+  }
+
+  // Show the container
+  recentlyViewedContainer.style.display = 'block';
+
+  // Build HTML for each product with variant and quantity info
+  const html = productsToShow
+    .map((product) => {
+      const quantity = product.quantity || 1;
+      const variantInfo =
+        product.variantTitle && product.variantTitle !== 'Default Title'
+          ? `<span class="cart-drawer-modern__recommendation-variant">${product.variantTitle}</span>`
+          : '';
+      const quantityInfo =
+        quantity > 1 ? `<span class="cart-drawer-modern__recommendation-quantity">Qty: ${quantity}</span>` : '';
+
+      return `
+    <div class="cart-drawer-modern__recommendation-item">
+      <a href="${product.url}" class="cart-drawer-modern__recommendation-image-link">
+        <img 
+          src="${product.image}"
+          alt="${product.title}"
+          class="cart-drawer-modern__recommendation-image"
+          loading="lazy"
+          width="100"
+          height="100"
+        >
+      </a>
+      <div class="cart-drawer-modern__recommendation-details">
+        <a href="${product.url}" class="cart-drawer-modern__recommendation-title">
+          ${product.title}
+        </a>
+        ${variantInfo}
+        <p class="cart-drawer-modern__recommendation-price">
+          ${product.price}${quantityInfo ? ` × ${quantity}` : ''}
+        </p>
+      </div>
+      <form class="cart-drawer-modern__recommendation-form" action="/cart/add" method="post">
+        <input type="hidden" name="id" value="${product.variantId}">
+        <input type="hidden" name="quantity" value="${quantity}">
+        <button 
+          type="submit" 
+          name="add" 
+          class="cart-drawer-modern__recommendation-add"
+          ${!product.available ? 'disabled' : ''}
+        >
+          ${product.available ? 'ADD' : 'SOLD OUT'}
+        </button>
+      </form>
+    </div>
+  `;
+    })
+    .join('');
+
+  recommendationsList.innerHTML = html;
+}
+
+// Run when DOM is loaded
+document.addEventListener('DOMContentLoaded', loadRecentlyViewedProducts);
+
+// Track product views - call this on product pages
+window.trackProductView = function (productData) {
+  const recentlyViewed = JSON.parse(localStorage.getItem('recently_viewed_products') || '[]');
+
+  // Remove if already exists
+  const filtered = recentlyViewed.filter((p) => p.id !== productData.id);
+
+  // Add to beginning
+  filtered.unshift(productData);
+
+  // Keep only last 10
+  const trimmed = filtered.slice(0, 10);
+
+  localStorage.setItem('recently_viewed_products', JSON.stringify(trimmed));
+};

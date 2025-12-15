@@ -1,1 +1,15 @@
-{%- render 'cart-drawer-modern' -%}
+{%- render 'cart-drawer-modern', fallback_collection: section.settings.fallback_collection -%}
+
+{% schema %}
+{
+  "name": "Cart Drawer",
+  "settings": [
+    {
+      "type": "collection",
+      "id": "fallback_collection",
+      "label": "Fallback Collection",
+      "info": "Products from this collection will be shown as suggestions when the user has not viewed any products yet."
+    }
+  ]
+}
+{% endschema %}

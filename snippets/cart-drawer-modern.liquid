@@ -22,18 +22,45 @@
   if remaining_cents < 0
     assign remaining_cents = 0
   endif
-  assign shipping_progress = cart_total_cents | times: 100 | divided_by: free_shipping_threshold_cents
+  assign shipping_progress_raw = cart_total_cents | times: 100.0 | divided_by: free_shipping_threshold_cents
+  assign shipping_progress = shipping_progress_raw | round: 0
   if shipping_progress > 100
     assign shipping_progress = 100
   endif
+  if shipping_progress < 0
+    assign shipping_progress = 0
+  endif
+  assign currency_code = cart.currency.iso_code
 -%}
 
-<cart-drawer-modern class="cart-drawer-modern{% if cart == empty %} is-empty{% endif %}" id="CartDrawerModern">
+{%- comment -%} Build fallback collection products JSON {%- endcomment -%}
+{%- capture fallback_products_json -%}
+[
+  {%- if fallback_collection != blank -%}
+    {%- for product in fallback_collection.products limit: 4 -%}
+      {
+        "id": {{ product.id | json }},
+        "title": {{ product.title | json }},
+        "url": {{ product.url | json }},
+        "image": {{ product.featured_image | image_url: width: 200 | json }},
+        "price": {{ product.price | money | remove: ' ' | remove: currency_code | json }},
+        "variantId": {{ product.selected_or_first_available_variant.id | json }},
+        "variantTitle": {{ product.selected_or_first_available_variant.title | json }},
+        "variantOptions": {{ product.selected_or_first_available_variant.options | json }},
+        "quantity": 1,
+        "available": {{ product.available | json }}
+      }{%- unless forloop.last -%},{%- endunless -%}
+    {%- endfor -%}
+  {%- endif -%}
+]
+{%- endcapture -%}
+
+<cart-drawer-modern class="cart-drawer-modern{% if cart == empty %} is-empty{% endif %}" id="CartDrawerModern" data-money-format="{{ shop.money_format }}" data-currency-code="{{ currency_code }}" data-fallback-products="{{ fallback_products_json | strip_newlines | escape }}">
   <!-- Overlay -->
   <div class="cart-drawer-modern__overlay" data-cart-drawer-overlay></div>
 
   <!-- Main Container -->
-  <div class="cart-drawer-modern__container" role="dialog" aria-modal="true" aria-label="{{ 'sections.cart.title' | t }}">
+  <div class="cart-drawer-modern__container color-ocean-breeze" role="dialog" aria-modal="true" aria-label="{{ 'sections.cart.title' | t }}">
     
     <!-- Loading Overlay -->
     <div class="cart-drawer-modern__loading" data-cart-loading>
@@ -67,7 +94,7 @@
         <div class="cart-drawer-modern__shipping-progress" data-shipping-progress data-threshold="{{ free_shipping_threshold_cents }}">
           {%- if remaining_cents > 0 -%}
             <p class="cart-drawer-modern__shipping-text">
-              Spend <strong>{{ remaining_cents | money }}</strong> more for FREE shipping!
+              Spend <strong>{{ remaining_cents | money | remove: ' ' | remove: currency_code }}</strong> more for FREE shipping!
             </p>
           {%- else -%}
             <p class="cart-drawer-modern__shipping-success">
@@ -137,13 +164,13 @@
                 <div class="cart-drawer-modern__item-price">
                   {%- if item.original_price != item.final_price -%}
                     <span class="cart-drawer-modern__item-price-original">
-                      {{ item.original_price | money }}
+                      {{ item.original_price | money | remove: ' ' | remove: currency_code }}
                     </span>
                     <span class="cart-drawer-modern__item-price-sale">
-                      {{ item.final_price | money }}
+                      {{ item.final_price | money | remove: ' ' | remove: currency_code }}
                     </span>
                   {%- else -%}
-                    {{ item.original_price | money }}
+                    {{ item.original_price | money | remove: ' ' | remove: currency_code }}
                   {%- endif -%}
                 </div>
 
@@ -188,7 +215,7 @@
 
                   <!-- Line Price -->
                   <div class="cart-drawer-modern__item-line-price" data-line-price>
-                    {{ item.final_line_price | money }}
+                    {{ item.final_line_price | money | remove: ' ' | remove: currency_code }}
                   </div>
                 </div>
 
@@ -203,7 +230,7 @@
                           <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
                           <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
                         </svg>
-                        {{ discount.discount_application.title }} (-{{ discount.amount | money }})
+                        {{ discount.discount_application.title }} (-{{ discount.amount | money | remove: ' ' | remove: currency_code }})
                       </li>
                     {%- endfor -%}
                   </ul>
@@ -216,25 +243,6 @@
 
       <!-- Footer -->
       <footer class="cart-drawer-modern__footer">
-        {%- if settings.show_cart_note -%}
-          <div class="cart-drawer-modern__note" data-cart-note-wrapper>
-            <button type="button" class="cart-drawer-modern__note-toggle" data-cart-note-toggle>
-              <span>{{ 'sections.cart.note' | t }}</span>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-            </button>
-            <div class="cart-drawer-modern__note-content">
-              <textarea 
-                class="cart-drawer-modern__note-textarea"
-                name="note"
-                placeholder="{{ 'sections.cart.note' | t }}"
-                data-cart-note
-              >{{ cart.note }}</textarea>
-            </div>
-          </div>
-        {%- endif -%}
-
         {%- if cart.cart_level_discount_applications.size > 0 -%}
           <div class="cart-drawer-modern__discounts">
             {%- for discount in cart.cart_level_discount_applications -%}
@@ -243,7 +251,7 @@
                   <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
                   <line x1="7" y1="7" x2="7.01" y2="7"></line>
                 </svg>
-                <span>{{ discount.title | escape }} (-{{ discount.total_allocated_amount | money }})</span>
+                <span>{{ discount.title | escape }} (-{{ discount.total_allocated_amount | money | remove: ' ' | remove: currency_code }})</span>
               </div>
             {%- endfor -%}
           </div>
@@ -252,7 +260,7 @@
         <div class="cart-drawer-modern__totals">
           <div class="cart-drawer-modern__subtotal">
             <span class="cart-drawer-modern__subtotal-label">{{ 'sections.cart.subtotal' | t }}</span>
-            <span class="cart-drawer-modern__subtotal-value" data-cart-subtotal>{{ cart.total_price | money }}</span>
+            <span class="cart-drawer-modern__subtotal-value" data-cart-subtotal>{{ cart.total_price | money | remove: ' ' | remove: currency_code }}</span>
           </div>
           <p class="cart-drawer-modern__taxes">
             {{ 'sections.cart.taxes_and_shipping_at_checkout' | t | default: 'Taxes and shipping calculated at checkout' }}
@@ -272,8 +280,8 @@
           </svg>
         </button>
 
-        <a href="{{ routes.all_products_collection_url }}" class="cart-drawer-modern__continue">
-          {{ 'general.continue_shopping' | t }}
+        <a href="{{ routes.cart_url }}" class="cart-drawer-modern__continue">
+          View Cart
         </a>
       </footer>
 
@@ -288,68 +296,17 @@
               <path d="M16 10a4 4 0 0 1-8 0"></path>
             </svg>
           </div>
-          <h3 class="cart-drawer-modern__empty-title">You haven't added anything to cart.</h3>
+          <h3 class="cart-drawer-modern__empty-title">Let’s get ready to splash around!</h3>
           <a href="{{ routes.all_products_collection_url }}" class="cart-drawer-modern__empty-btn">
-            START SHOPPING
+            Add some items to your cart
           </a>
         </div>
 
-        <!-- Product Recommendations -->
-        <div class="cart-drawer-modern__recommendations">
+        <!-- Product Recommendations - Based on Recently Viewed -->
+        <div class="cart-drawer-modern__recommendations" id="cart-recently-viewed" style="display: none;">
           <h4 class="cart-drawer-modern__recommendations-title">Complete your order</h4>
-          
           <div class="cart-drawer-modern__recommendations-list" id="cart-recommendations">
-            {%- liquid
-              assign recommendation_collection = collections['best-sellers'] | default: collections['all']
-              assign recommendation_limit = 4
-            -%}
-            
-            {%- for product in recommendation_collection.products limit: recommendation_limit -%}
-              <div class="cart-drawer-modern__recommendation-item">
-                <a href="{{ product.url }}" class="cart-drawer-modern__recommendation-image-link">
-                  {%- if product.featured_image -%}
-                    <img 
-                      src="{{ product.featured_image | image_url: width: 200 }}"
-                      alt="{{ product.featured_image.alt | escape }}"
-                      class="cart-drawer-modern__recommendation-image"
-                      loading="lazy"
-                      width="100"
-                      height="100"
-                    >
-                  {%- else -%}
-                    {{ 'product-1' | placeholder_svg_tag: 'cart-drawer-modern__recommendation-image' }}
-                  {%- endif -%}
-                </a>
-                <div class="cart-drawer-modern__recommendation-details">
-                  <a href="{{ product.url }}" class="cart-drawer-modern__recommendation-title">
-                    {{ product.title | escape }}
-                  </a>
-                  <p class="cart-drawer-modern__recommendation-price">
-                    {%- if product.compare_at_price > product.price -%}
-                      <span class="cart-drawer-modern__recommendation-price-sale">{{ product.price | money }}</span>
-                      <span class="cart-drawer-modern__recommendation-price-compare">{{ product.compare_at_price | money }}</span>
-                    {%- else -%}
-                      {{ product.price | money }}
-                    {%- endif -%}
-                  </p>
-                </div>
-                {%- form 'product', product, class: 'cart-drawer-modern__recommendation-form' -%}
-                  <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
-                  <button 
-                    type="submit" 
-                    name="add" 
-                    class="cart-drawer-modern__recommendation-add"
-                    {% unless product.available %}disabled{% endunless %}
-                  >
-                    {%- if product.available -%}
-                      ADD TO CART
-                    {%- else -%}
-                      SOLD OUT
-                    {%- endif -%}
-                  </button>
-                {%- endform -%}
-              </div>
-            {%- endfor -%}
+            <!-- Products will be loaded via JavaScript from browsing history -->
           </div>
         </div>
       </div>
