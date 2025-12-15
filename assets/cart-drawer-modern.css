@@ -78,7 +78,7 @@
 }
 
 .cart-drawer-modern__title {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 600;
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -721,7 +721,7 @@
 }
 
 .cart-drawer-modern__empty-title {
-  font-size: 1.15rem;
+  font-size: 1.25rem;
   font-weight: 400;
   margin-bottom: 20px;
   color: rgb(var(--color-foreground));
@@ -760,7 +760,7 @@
 }
 
 .cart-drawer-modern__recommendations-title {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 500;
   color: rgb(var(--color-foreground));
   margin-bottom: 16px;
@@ -819,6 +819,7 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  text-align: left;
 }
 
 .cart-drawer-modern__recommendation-title {
@@ -907,7 +908,7 @@
   }
 
   .cart-drawer-modern__title {
-    font-size: 1.1rem;
+    font-size: 1.5rem;
   }
 
   .cart-drawer-modern__shipping-progress {
@@ -985,11 +986,7 @@
   }
 
   .cart-drawer-modern__empty-title {
-    font-size: 1rem;
-  }
-
-  .cart-drawer-modern__recommendations {
-    padding: 16px;
+    font-size: 1.25rem;
   }
 
   .cart-drawer-modern__recommendation-item {

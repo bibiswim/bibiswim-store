@@ -402,6 +402,13 @@ class CartDrawerModern extends HTMLElement {
       minusBtn.disabled = quantity <= 1;
     }
 
+    // Update plus button state based on max quantity
+    const plusBtn = itemEl?.querySelector('[data-quantity-plus]');
+    const maxQuantity = parseInt(itemEl?.dataset.maxQuantity);
+    if (plusBtn && maxQuantity) {
+      plusBtn.disabled = quantity >= maxQuantity;
+    }
+
     try {
       const response = await fetch('/cart/change.js', {
         method: 'POST',
@@ -414,11 +421,19 @@ class CartDrawerModern extends HTMLElement {
         }),
       });
 
+      if (!response.ok) {
+        // If there's an error (e.g., exceeding max quantity), refresh the drawer
+        await this.refreshDrawer();
+        return;
+      }
+
       const cart = await response.json();
       this.updateCartUI(cart);
       this.updateHeaderCartCount(cart.item_count);
     } catch (error) {
       console.error('Error updating quantity:', error);
+      // Refresh drawer to restore correct state
+      await this.refreshDrawer();
     } finally {
       itemEl?.classList.remove('is-loading');
       this.hideLoading();
@@ -457,14 +472,26 @@ class CartDrawerModern extends HTMLElement {
     if (cart.item_count === 0) {
       this.classList.add('is-empty');
       this.refreshDrawer();
-    } else {
-      // Update line prices
+    } else if (cart.items && Array.isArray(cart.items)) {
+      // Update line prices only if cart.items exists
       cart.items.forEach((item, index) => {
         const itemEl = this.querySelector(`[data-cart-item]:nth-child(${index + 1})`);
         if (itemEl) {
           const linePrice = itemEl.querySelector('[data-line-price]');
           if (linePrice) {
             linePrice.textContent = this.formatMoney(item.final_line_price);
+          }
+
+          // Update button states based on quantity
+          const minusBtn = itemEl.querySelector('[data-quantity-minus]');
+          const plusBtn = itemEl.querySelector('[data-quantity-plus]');
+          const maxQuantity = parseInt(itemEl.dataset.maxQuantity);
+
+          if (minusBtn) {
+            minusBtn.disabled = item.quantity <= 1;
+          }
+          if (plusBtn && maxQuantity) {
+            plusBtn.disabled = item.quantity >= maxQuantity;
           }
         }
       });
@@ -573,6 +600,11 @@ class CartDrawerModern extends HTMLElement {
       if (newDrawer) {
         this.innerHTML = newDrawer.innerHTML;
         this.bindEvents();
+
+        // Reload recommendations after drawer refresh (especially for empty state)
+        if (typeof loadRecentlyViewedProducts === 'function') {
+          loadRecentlyViewedProducts();
+        }
       }
     } catch (error) {
       console.error('Error refreshing drawer:', error);

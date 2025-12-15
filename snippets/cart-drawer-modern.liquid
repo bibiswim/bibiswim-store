@@ -71,7 +71,7 @@
       <div class="cart-drawer-modern__items" data-cart-items>
         <form action="{{ routes.cart_url }}" method="post" id="CartDrawerModernForm">
           {%- for item in cart.items -%}
-            <div class="cart-drawer-modern__item" data-cart-item data-line-item-key="{{ item.key }}" data-variant-id="{{ item.variant.id }}">
+            <div class="cart-drawer-modern__item" data-cart-item data-line-item-key="{{ item.key }}" data-variant-id="{{ item.variant.id }}" data-max-quantity="{{ item.variant.inventory_quantity }}">
               <!-- Product Image -->
               <div class="cart-drawer-modern__item-image-wrapper">
                 <a href="{{ item.url }}" class="cart-drawer-modern__item-link" tabindex="-1">
@@ -162,6 +162,7 @@
                       data-quantity-plus
                       data-line="{{ forloop.index }}"
                       aria-label="{{ 'products.product.quantity.increase' | t: product: item.product.title | escape }}"
+                      {% if item.quantity >= item.variant.inventory_quantity %}disabled{% endif %}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -282,7 +283,7 @@
 
         <!-- Product Recommendations - Based on Recently Viewed -->
         <div class="cart-drawer-modern__recommendations" id="cart-recently-viewed" style="display: none;">
-          <h4 class="cart-drawer-modern__recommendations-title">Complete your order</h4>
+          <h4 class="cart-drawer-modern__recommendations-title">Recently Viewed</h4>
           <div class="cart-drawer-modern__recommendations-list" id="cart-recommendations">
             <!-- Products will be loaded via JavaScript from browsing history -->
           </div>
