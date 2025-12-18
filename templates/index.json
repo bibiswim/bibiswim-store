@@ -16,56 +16,56 @@
           "type": "link",
           "name": "Boy",
           "settings": {
-            "label": "BOY",
-            "link": "shopify://collections/boy-swimsuit"
+            "label": "KIDS",
+            "link": "shopify://collections/girl-swimsuit"
           }
         },
         "link_Fx4zMy": {
           "type": "link",
           "name": "Girl",
           "settings": {
-            "label": "Girl",
-            "link": "shopify://collections/girl-swimsuit"
+            "label": "ADULT",
+            "link": "shopify://collections/lady-swimwear"
           }
         },
         "link_egVNqz": {
           "type": "link",
           "name": "Muslimah",
           "settings": {
-            "label": "Adult",
-            "link": "shopify://collections/lady-swimwear"
+            "label": "SWIMCAP",
+            "link": "shopify://collections/swimming-cap"
           }
         },
         "link_x63mzV": {
           "type": "link",
           "name": "Sunscreen",
           "settings": {
-            "label": "Sunscreen",
-            "link": "shopify://collections/sunscreen-tools"
+            "label": "GOGGLES",
+            "link": "shopify://collections/swimming-goggles"
           }
         },
         "link_x77ewB": {
           "type": "link",
           "name": "Bath Toys",
           "settings": {
-            "label": "Baby Toys",
-            "link": "shopify://collections/swimming-bath-toys"
+            "label": "SWIMRING",
+            "link": "shopify://collections/swimming-floaties"
           }
         },
         "link_X4AV88": {
           "type": "link",
           "name": "Goggles",
           "settings": {
-            "label": "Goggles",
-            "link": "shopify://collections/swimming-goggles"
+            "label": "SWIMSHOES",
+            "link": "shopify://collections/swimming-shoes"
           }
         },
         "link_xYjHiA": {
           "type": "link",
           "name": "SwimCap",
           "settings": {
-            "label": "SwimCap",
-            "link": "shopify://collections/swimming-cap"
+            "label": "BABYTOYS",
+            "link": "shopify://collections/swimming-bath-toys"
           }
         }
       },
@@ -83,13 +83,30 @@
         "color_scheme": "scheme-2c010289-6033-4712-a74d-b18cf7dbf7f9"
       }
     },
+    "image_banner_VWBAiQ": {
+      "type": "image-banner",
+      "name": "t:sections.image-banner.presets.name",
+      "settings": {
+        "image": "shopify://shop_images/Mermaid_Fantasy.png",
+        "image_overlay_opacity": 0,
+        "image_height": "adapt",
+        "image_behavior": "none",
+        "desktop_content_position": "middle-center",
+        "desktop_content_alignment": "center",
+        "show_text_box": true,
+        "color_scheme": "",
+        "stack_images_on_mobile": true,
+        "mobile_content_alignment": "center",
+        "show_text_below": true
+      }
+    },
     "slideshow_qKqtq6": {
       "type": "slideshow",
       "blocks": {
         "slide_nYLeWF": {
           "type": "slide",
           "settings": {
-            "image": "shopify://shop_images/Website_Main_Banner_2560x1240_325e0971-4609-4333-aede-79e5d87bfac0.webp",
+            "image": "shopify://shop_images/Untitled_design_1.png",
             "image_overlay_opacity": 0,
             "heading": "",
             "heading_size": "h1",
@@ -113,7 +130,7 @@
             "heading_size": "h1",
             "subheading": "",
             "button_label": "",
-            "link": "",
+            "link": "shopify://products/mermaid-swimming-suit-kids-girl-2-piece-swimsuit-muslimah-swimwear-baju-renang-budak-perempuan",
             "button_style_secondary": false,
             "show_text_box": false,
             "box_align": "middle-center",
@@ -131,11 +148,11 @@
       "settings": {
         "layout": "full_bleed",
         "slide_height": "adapt_image",
-        "slider_visual": "counter",
+        "slider_visual": "dots",
         "auto_rotate": true,
         "change_slides_speed": 5,
         "image_behavior": "none",
-        "show_text_below": true,
+        "show_text_below": false,
         "accessibility_info": "Slideshow about our brand"
       }
     },
@@ -171,28 +188,20 @@
         "category_bPXBMh": {
           "type": "category",
           "settings": {
-            "icon": "shopify://shop_images/Categories-Goggles.webp",
-            "title": "Goggles",
-            "link": "shopify://collections/swimming-goggles"
+            "icon": "shopify://shop_images/Categories-Swimhat.webp",
+            "title": "SwimCap",
+            "link": "shopify://collections/swimming-cap"
           }
         },
         "category_yWR4Tc": {
           "type": "category",
           "settings": {
-            "icon": "shopify://shop_images/Categories-Swimhat.webp",
-            "title": "SwimHat",
-            "link": "shopify://collections/swimming-cap"
+            "icon": "shopify://shop_images/Categories-Goggles.webp",
+            "title": "Goggles",
+            "link": "shopify://collections/swimming-goggles"
           }
         },
         "category_rhrWta": {
-          "type": "category",
-          "settings": {
-            "icon": "shopify://shop_images/width_200_1.webp",
-            "title": "SwimToys",
-            "link": "shopify://collections/swimming-bath-toys"
-          }
-        },
-        "category_ychJKq": {
           "type": "category",
           "settings": {
             "icon": "shopify://shop_images/Categories-SwimRing.webp",
@@ -200,11 +209,19 @@
             "link": "shopify://collections/swimming-floaties"
           }
         },
+        "category_ychJKq": {
+          "type": "category",
+          "settings": {
+            "icon": "shopify://shop_images/SWIMSHOES.webp",
+            "title": "SwimShoes",
+            "link": "shopify://collections/swimming-shoes"
+          }
+        },
         "category_TJBHx4": {
           "type": "category",
           "settings": {
-            "icon": "shopify://shop_images/Categories-Toys.webp",
-            "title": "Toys",
+            "icon": "shopify://shop_images/WATERGUN.webp",
+            "title": "BabyToys",
             "link": "shopify://collections/swimming-bath-toys"
           }
         },
@@ -219,9 +236,9 @@
         "category_MPLK7F": {
           "type": "category",
           "settings": {
-            "icon": "shopify://shop_images/Categories-Accessories.webp",
-            "title": "Accessories",
-            "link": "shopify://collections/swimming-shoes"
+            "icon": "shopify://shop_images/BEACH_HAT.webp",
+            "title": "Sunscreen",
+            "link": "shopify://collections/sunscreen-tools"
           }
         },
         "category_kUDrQ3": {
@@ -229,7 +246,7 @@
           "settings": {
             "icon": "shopify://shop_images/Categories-Other.webp",
             "title": "Other",
-            "link": ""
+            "link": "shopify://collections/🛠️other🛠️"
           }
         }
       },
@@ -284,7 +301,7 @@
       "type": "featured-collection",
       "name": "Hot Deals",
       "settings": {
-        "collection": "swimming-bath-toys",
+        "collection": "🔥hot-deals🔥",
         "products_to_show": 6,
         "title": "🔥Hot Deals 🔥",
         "heading_size": "h1",
@@ -330,7 +347,7 @@
       "type": "featured-collection",
       "name": "Clearance Stock",
       "settings": {
-        "collection": "sunscreen-tools",
+        "collection": "clearance-collection",
         "products_to_show": 6,
         "title": "🎉Clearance Stock🎉",
         "heading_size": "h1",
@@ -427,6 +444,7 @@
   },
   "order": [
     "top_navigation_RKYUxD",
+    "image_banner_VWBAiQ",
     "slideshow_qKqtq6",
     "image_banner",
     "category_navigation_FTCb79",
