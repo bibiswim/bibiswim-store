@@ -399,7 +399,6 @@ if (!customElements.get('product-info')) {
 
       updateQuantityRules(sectionId, html) {
         if (!this.quantityInput) return;
-        this.setQuantityBoundries();
 
         const quantityFormUpdated = html.getElementById(`Quantity-Form-${sectionId}`);
         const selectors = ['.quantity__input', '.quantity__rules', '.quantity__label'];
@@ -434,6 +433,11 @@ if (!customElements.get('product-info')) {
             }
           }
         }
+
+        // Set quantity boundaries AFTER updating attributes so the new variant's
+        // cart quantity is used for calculations (fixes bug where switching from
+        // a variant with max quantity in cart would result in quantity 0)
+        this.setQuantityBoundries();
       }
 
       get productForm() {
