@@ -8,11 +8,15 @@ if (!customElements.get('product-form')) {
         this.form = this.querySelector('form');
         this.variantIdInput.disabled = false;
         this.form.addEventListener('submit', this.onSubmitHandler.bind(this));
-        this.cart = document.querySelector('cart-notification') || document.querySelector('cart-drawer');
+        this.cart =
+          document.querySelector('cart-notification') ||
+          document.querySelector('cart-drawer') ||
+          document.querySelector('cart-drawer-modern');
         this.submitButton = this.querySelector('[type="submit"]');
         this.submitButtonText = this.submitButton.querySelector('span');
 
-        if (document.querySelector('cart-drawer')) this.submitButton.setAttribute('aria-haspopup', 'dialog');
+        if (document.querySelector('cart-drawer') || document.querySelector('cart-drawer-modern'))
+          this.submitButton.setAttribute('aria-haspopup', 'dialog');
 
         this.hideErrors = this.dataset.hideErrors === 'true';
       }
@@ -20,6 +24,29 @@ if (!customElements.get('product-form')) {
       onSubmitHandler(evt) {
         evt.preventDefault();
         if (this.submitButton.getAttribute('aria-disabled') === 'true') return;
+
+        // Check if we're exceeding max quantity before submitting
+        const quantityInput = this.form.querySelector('input[name="quantity"]');
+        if (quantityInput) {
+          const requestedQty = parseInt(quantityInput.value) || 1;
+          const cartQty = parseInt(quantityInput.dataset.cartQuantity) || 0;
+          const maxQty = quantityInput.dataset.max ? parseInt(quantityInput.dataset.max) : null;
+          
+          if (maxQty !== null) {
+            const totalAfterAdd = cartQty + requestedQty;
+            if (totalAfterAdd > maxQty) {
+              const remaining = maxQty - cartQty;
+              let errorMsg = '';
+              if (remaining <= 0) {
+                errorMsg = `Maximum quantity (${maxQty}) already in cart`;
+              } else {
+                errorMsg = `Only ${remaining} more available (${cartQty} already in cart)`;
+              }
+              this.handleErrorMessage(errorMsg);
+              return;
+            }
+          }
+        }
 
         this.handleErrorMessage();
 
@@ -82,7 +109,7 @@ if (!customElements.get('product-form')) {
                 'modalClosed',
                 () => {
                   setTimeout(() => {
-                    CartPerformance.measure("add:paint-updated-sections", () => {
+                    CartPerformance.measure('add:paint-updated-sections', () => {
                       this.cart.renderContents(response);
                     });
                   });
@@ -91,7 +118,7 @@ if (!customElements.get('product-form')) {
               );
               quickAddModal.hide(true);
             } else {
-              CartPerformance.measure("add:paint-updated-sections", () => {
+              CartPerformance.measure('add:paint-updated-sections', () => {
                 this.cart.renderContents(response);
               });
             }
@@ -105,7 +132,7 @@ if (!customElements.get('product-form')) {
             if (!this.error) this.submitButton.removeAttribute('aria-disabled');
             this.querySelector('.loading__spinner').classList.add('hidden');
 
-            CartPerformance.measureFromEvent("add:user-action", evt);
+            CartPerformance.measureFromEvent('add:user-action', evt);
           });
       }
 

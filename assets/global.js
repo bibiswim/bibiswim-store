@@ -247,6 +247,12 @@ class QuantityInput extends HTMLElement {
     const previousValue = this.input.value;
 
     if (event.target.name === 'plus') {
+      // Check if we can increment (considering cart quantity for product page)
+      if (!this.canIncrement()) {
+        this.showMaxQuantityWarning();
+        return;
+      }
+      
       if (parseInt(this.input.dataset.min) > parseInt(this.input.step) && this.input.value == 0) {
         this.input.value = this.input.dataset.min;
       } else {
@@ -263,16 +269,90 @@ class QuantityInput extends HTMLElement {
     }
   }
 
-  validateQtyRules() {
-    const value = parseInt(this.input.value);
-    if (this.input.min) {
-      const buttonMinus = this.querySelector(".quantity__button[name='minus']");
-      buttonMinus.classList.toggle('disabled', parseInt(value) <= parseInt(this.input.min));
+  canIncrement() {
+    const currentValue = parseInt(this.input.value) || 0;
+    const step = parseInt(this.input.step) || 1;
+    const cartQuantity = parseInt(this.input.dataset.cartQuantity) || 0;
+    const dataMax = this.input.dataset.max ? parseInt(this.input.dataset.max) : null;
+    
+    // If there's a max limit set
+    if (dataMax !== null) {
+      // Calculate total that would be in cart after adding
+      const totalAfterAdd = cartQuantity + currentValue + step;
+      return totalAfterAdd <= dataMax;
     }
-    if (this.input.max) {
+    
+    return true;
+  }
+
+  showMaxQuantityWarning() {
+    const cartQuantity = parseInt(this.input.dataset.cartQuantity) || 0;
+    const dataMax = this.input.dataset.max ? parseInt(this.input.dataset.max) : null;
+    
+    if (dataMax !== null) {
+      const remaining = dataMax - cartQuantity;
+      let message = '';
+      
+      if (remaining <= 0) {
+        message = `Maximum quantity (${dataMax}) already in cart`;
+      } else {
+        message = `Only ${remaining} more available (${cartQuantity} already in cart)`;
+      }
+      
+      // Show warning near the quantity input
+      this.showTemporaryMessage(message);
+    }
+  }
+
+  showTemporaryMessage(message) {
+    // Remove any existing warning
+    const existingWarning = this.querySelector('.quantity-warning');
+    if (existingWarning) existingWarning.remove();
+    
+    // Create warning element
+    const warning = document.createElement('div');
+    warning.className = 'quantity-warning';
+    warning.textContent = message;
+    warning.style.cssText = 'position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#dc2626;color:white;padding:6px 12px;border-radius:4px;font-size:12px;white-space:nowrap;z-index:10;margin-bottom:4px;';
+    
+    // Position container relatively if not already
+    if (getComputedStyle(this).position === 'static') {
+      this.style.position = 'relative';
+    }
+    
+    this.appendChild(warning);
+    
+    // Remove after 3 seconds
+    setTimeout(() => warning.remove(), 3000);
+  }
+
+  validateQtyRules() {
+    const value = parseInt(this.input.value) || 0;
+    const cartQuantity = parseInt(this.input.dataset.cartQuantity) || 0;
+    const dataMax = this.input.dataset.max ? parseInt(this.input.dataset.max) : null;
+    
+    // Handle minus button
+    const buttonMinus = this.querySelector(".quantity__button[name='minus']");
+    if (buttonMinus && this.input.min) {
+      const isAtMin = value <= parseInt(this.input.min);
+      buttonMinus.classList.toggle('disabled', isAtMin);
+      buttonMinus.disabled = isAtMin;
+    }
+    
+    // Handle plus button - consider cart quantity for max calculation
+    const buttonPlus = this.querySelector(".quantity__button[name='plus']");
+    if (buttonPlus && dataMax !== null) {
+      // Calculate remaining available quantity
+      const remainingAvailable = dataMax - cartQuantity;
+      const isAtMax = value >= remainingAvailable || remainingAvailable <= 0;
+      buttonPlus.classList.toggle('disabled', isAtMax);
+      buttonPlus.disabled = isAtMax;
+    } else if (buttonPlus && this.input.max) {
+      // Fallback to simple max check
       const max = parseInt(this.input.max);
-      const buttonPlus = this.querySelector(".quantity__button[name='plus']");
-      buttonPlus.classList.toggle('disabled', value >= max);
+      const isAtMax = value >= max;
+      buttonPlus.classList.toggle('disabled', isAtMax);
+      buttonPlus.disabled = isAtMax;
     }
   }
 }

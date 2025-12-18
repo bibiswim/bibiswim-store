@@ -267,11 +267,18 @@
                         {% if product.selected_or_first_available_variant.quantity_rule.max != null %}
                           data-max="{{ product.selected_or_first_available_variant.quantity_rule.max }}"
                           max="{{ product.selected_or_first_available_variant.quantity_rule.max }}"
+                        {% elsif product.selected_or_first_available_variant.inventory_management == 'shopify' and product.selected_or_first_available_variant.inventory_policy != 'continue' %}
+                          data-max="{{ product.selected_or_first_available_variant.inventory_quantity }}"
+                          max="{{ product.selected_or_first_available_variant.inventory_quantity }}"
+                        {% endif %}
+                        {% if product.selected_or_first_available_variant.inventory_management == 'shopify' %}
+                          data-inventory-quantity="{{ product.selected_or_first_available_variant.inventory_quantity }}"
                         {% endif %}
                         step="{{ product.selected_or_first_available_variant.quantity_rule.increment }}"
                         value="{{ product.selected_or_first_available_variant.quantity_rule.min }}"
                         form="{{ product_form_id }}"
                       >
+
                       <button class="quantity__button" name="plus" type="button">
                         <span class="visually-hidden">
                           {{- 'products.product.quantity.increase' | t: product: product.title | escape -}}
@@ -754,6 +761,37 @@
 
     <script type="application/ld+json">
       {{ product | structured_data }}
+    </script>
+
+    <!-- Track product view for recently viewed -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Get current variant selection and quantity from the page
+        var currentVariant = {{ product.selected_or_first_available_variant | json }};
+        var quantityInput = document.querySelector('input[name="quantity"]');
+        var currentQuantity = quantityInput ? parseInt(quantityInput.value) || 1 : 1;
+        
+        // Get variant options
+        var variantOptions = [];
+        {%- for option in product.selected_or_first_available_variant.options -%}
+          variantOptions.push({{ option | json }});
+        {%- endfor -%}
+        
+        if (typeof window.trackProductView === 'function') {
+          window.trackProductView({
+            id: {{ product.id | json }},
+            title: {{ product.title | json }},
+            url: {{ product.url | json }},
+            image: {{ product.featured_image | image_url: width: 200 | json }},
+            price: {{ product.price | money | remove: ' ' | remove: cart.currency.iso_code | json }},
+            variantId: currentVariant.id,
+            variantTitle: currentVariant.title,
+            variantOptions: variantOptions,
+            quantity: currentQuantity,
+            available: currentVariant.available
+          });
+        }
+      });
     </script>
   </div>
 </product-info>

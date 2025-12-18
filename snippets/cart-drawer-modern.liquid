@@ -1,0 +1,297 @@
+{% comment %}
+  Modern Cart Drawer - Inspired by Chuck's
+  Features:
+  - Slide-in from right with smooth animation
+  - Free shipping progress bar
+  - Modern UI with clean design
+  - Responsive for all devices
+  - Improved accessibility
+
+  Usage: {% render 'cart-drawer-modern' %}
+{% endcomment %}
+
+{{ 'cart-drawer-modern.css' | asset_url | stylesheet_tag }}
+
+<script src="{{ 'cart.js' | asset_url }}" defer="defer"></script>
+
+{%- liquid
+  assign free_shipping_threshold = settings.free_shipping_threshold | default: 200
+  assign free_shipping_threshold_cents = free_shipping_threshold | times: 100
+  assign cart_total_cents = cart.total_price
+  assign remaining_cents = free_shipping_threshold_cents | minus: cart_total_cents
+  if remaining_cents < 0
+    assign remaining_cents = 0
+  endif
+  assign shipping_progress_raw = cart_total_cents | times: 100.0 | divided_by: free_shipping_threshold_cents
+  assign shipping_progress = shipping_progress_raw | round: 0
+  if shipping_progress > 100
+    assign shipping_progress = 100
+  endif
+  if shipping_progress < 0
+    assign shipping_progress = 0
+  endif
+  assign currency_code = cart.currency.iso_code
+-%}
+
+<cart-drawer-modern class="cart-drawer-modern{% if cart == empty %} is-empty{% endif %}" id="CartDrawerModern" data-money-format="{{ shop.money_format }}" data-currency-code="{{ currency_code }}">
+  <!-- Overlay -->
+  <div class="cart-drawer-modern__overlay" data-cart-drawer-overlay></div>
+
+  <!-- Main Container -->
+  <div class="cart-drawer-modern__container color-ocean-breeze" role="dialog" aria-modal="true" aria-label="{{ 'sections.cart.title' | t }}">
+    
+    <!-- Loading Overlay -->
+    <div class="cart-drawer-modern__loading" data-cart-loading>
+      <div class="cart-drawer-modern__spinner"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="cart-drawer-modern__header">
+      <h2 class="cart-drawer-modern__title">
+        {{ 'sections.cart.title' | t }}
+        <span class="cart-drawer-modern__item-count" data-cart-count>
+          {%- if cart.item_count > 0 -%}({{ cart.item_count }}){%- endif -%}
+        </span>
+      </h2>
+      <button 
+        class="cart-drawer-modern__close" 
+        type="button" 
+        data-cart-drawer-close
+        aria-label="{{ 'accessibility.close' | t }}"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </header>
+
+    {%- if cart != empty -%}
+      <!-- Cart Items -->
+      <div class="cart-drawer-modern__items" data-cart-items>
+        <form action="{{ routes.cart_url }}" method="post" id="CartDrawerModernForm">
+          {%- for item in cart.items -%}
+            <div class="cart-drawer-modern__item" data-cart-item data-line-item-key="{{ item.key }}" data-variant-id="{{ item.variant.id }}" data-max-quantity="{{ item.variant.inventory_quantity }}">
+              <!-- Product Image -->
+              <div class="cart-drawer-modern__item-image-wrapper">
+                <a href="{{ item.url }}" class="cart-drawer-modern__item-link" tabindex="-1">
+                  {%- if item.image -%}
+                    <img 
+                      class="cart-drawer-modern__item-image"
+                      src="{{ item.image | image_url: width: 200 }}"
+                      alt="{{ item.image.alt | escape }}"
+                      loading="lazy"
+                      width="100"
+                      height="120"
+                    >
+                  {%- else -%}
+                    {{ 'product-1' | placeholder_svg_tag: 'cart-drawer-modern__item-image' }}
+                  {%- endif -%}
+                </a>
+              </div>
+
+              <!-- Product Details -->
+              <div class="cart-drawer-modern__item-details">
+                <div class="cart-drawer-modern__item-header">
+                  <a href="{{ item.url }}" class="cart-drawer-modern__item-title">
+                    {{ item.product.title | escape }}
+                  </a>
+                  <button 
+                    type="button" 
+                    class="cart-drawer-modern__item-remove"
+                    data-remove-item
+                    data-line="{{ forloop.index }}"
+                    aria-label="{{ 'sections.cart.remove_title' | t: title: item.title | escape }}"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                  </button>
+                </div>
+
+                {%- if item.product.has_only_default_variant == false or item.properties.size != 0 -%}
+                  <div class="cart-drawer-modern__item-variant">
+                    {%- for option in item.options_with_values -%}
+                      <span>{{ option.value }}</span>
+                    {%- endfor -%}
+                  </div>
+                {%- endif -%}
+
+                <div class="cart-drawer-modern__item-price">
+                  {%- if item.original_price != item.final_price -%}
+                    <span class="cart-drawer-modern__item-price-original">
+                      {{ item.original_price | money | remove: ' ' | remove: currency_code }}
+                    </span>
+                    <span class="cart-drawer-modern__item-price-sale">
+                      {{ item.final_price | money | remove: ' ' | remove: currency_code }}
+                    </span>
+                  {%- else -%}
+                    {{ item.original_price | money | remove: ' ' | remove: currency_code }}
+                  {%- endif -%}
+                </div>
+
+                <div class="cart-drawer-modern__item-footer">
+                  <!-- Quantity Selector -->
+                  <div class="cart-drawer-modern__quantity">
+                    <button 
+                      type="button" 
+                      class="cart-drawer-modern__quantity-btn" 
+                      data-quantity-minus
+                      data-line="{{ forloop.index }}"
+                      aria-label="{{ 'products.product.quantity.decrease' | t: product: item.product.title | escape }}"
+                      {% if item.quantity <= 1 %}disabled{% endif %}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </button>
+                    <input 
+                      type="number" 
+                      class="cart-drawer-modern__quantity-input"
+                      name="updates[]"
+                      value="{{ item.quantity }}"
+                      min="0"
+                      data-quantity-input
+                      data-line="{{ forloop.index }}"
+                      aria-label="{{ 'products.product.quantity.input_label' | t: product: item.product.title | escape }}"
+                    >
+                    <button 
+                      type="button" 
+                      class="cart-drawer-modern__quantity-btn" 
+                      data-quantity-plus
+                      data-line="{{ forloop.index }}"
+                      aria-label="{{ 'products.product.quantity.increase' | t: product: item.product.title | escape }}"
+                      {% if item.quantity >= item.variant.inventory_quantity %}disabled{% endif %}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </button>
+                  </div>
+
+                  <!-- Line Price -->
+                  <div class="cart-drawer-modern__item-line-price" data-line-price>
+                    {{ item.final_line_price | money | remove: ' ' | remove: currency_code }}
+                  </div>
+                </div>
+
+                {%- if item.line_level_discount_allocations.size > 0 -%}
+                  <ul class="cart-drawer-modern__item-discounts">
+                    {%- for discount in item.line_level_discount_allocations -%}
+                      <li class="cart-drawer-modern__item-discount">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="20 12 20 22 4 22 4 12"></polyline>
+                          <rect x="2" y="7" width="20" height="5"></rect>
+                          <line x1="12" y1="22" x2="12" y2="7"></line>
+                          <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+                          <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+                        </svg>
+                        {{ discount.discount_application.title }} (-{{ discount.amount | money | remove: ' ' | remove: currency_code }})
+                      </li>
+                    {%- endfor -%}
+                  </ul>
+                {%- endif -%}
+              </div>
+            </div>
+          {%- endfor -%}
+        </form>
+      </div>
+
+      <!-- Free Shipping Progress -->
+      {%- if free_shipping_threshold > 0 -%}
+        <div class="cart-drawer-modern__shipping-progress" data-shipping-progress data-threshold="{{ free_shipping_threshold_cents }}">
+          {%- if remaining_cents > 0 -%}
+            <p class="cart-drawer-modern__shipping-text">
+              Spend <strong>{{ remaining_cents | money | remove: ' ' | remove: currency_code }}</strong> more for FREE shipping!
+            </p>
+          {%- else -%}
+            <p class="cart-drawer-modern__shipping-success">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              You've unlocked FREE shipping!
+            </p>
+          {%- endif -%}
+          <div class="cart-drawer-modern__progress-bar">
+            <div class="cart-drawer-modern__progress-fill" style="width: {{ shipping_progress }}%"></div>
+          </div>
+        </div>
+      {%- endif -%}
+
+      <!-- Footer -->
+      <footer class="cart-drawer-modern__footer">
+        {%- if cart.cart_level_discount_applications.size > 0 -%}
+          <div class="cart-drawer-modern__discounts">
+            {%- for discount in cart.cart_level_discount_applications -%}
+              <div class="cart-drawer-modern__discount">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                  <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                </svg>
+                <span>{{ discount.title | escape }} (-{{ discount.total_allocated_amount | money | remove: ' ' | remove: currency_code }})</span>
+              </div>
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+
+        <div class="cart-drawer-modern__totals">
+          <div class="cart-drawer-modern__subtotal">
+            <span class="cart-drawer-modern__subtotal-label">{{ 'sections.cart.subtotal' | t }}</span>
+            <span class="cart-drawer-modern__subtotal-value" data-cart-subtotal>{{ cart.total_price | money | remove: ' ' | remove: currency_code }}</span>
+          </div>
+          <p class="cart-drawer-modern__taxes">
+            {{ 'sections.cart.taxes_and_shipping_at_checkout' | t | default: 'Taxes and shipping calculated at checkout' }}
+          </p>
+        </div>
+
+        <button 
+          type="submit" 
+          name="checkout" 
+          class="cart-drawer-modern__checkout"
+          form="CartDrawerModernForm"
+        >
+          {{ 'sections.cart.checkout' | t }}
+          <svg class="cart-drawer-modern__checkout-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </button>
+
+        <a href="{{ routes.cart_url }}" class="cart-drawer-modern__continue">
+          View Cart
+        </a>
+      </footer>
+
+    {%- else -%}
+      <!-- Empty State -->
+      <div class="cart-drawer-modern__empty">
+        <div class="cart-drawer-modern__empty-content">
+          <div class="cart-drawer-modern__empty-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <path d="M16 10a4 4 0 0 1-8 0"></path>
+            </svg>
+          </div>
+          <h3 class="cart-drawer-modern__empty-title">Let’s get ready to splash around!</h3>
+          <a href="{{ routes.all_products_collection_url }}" class="cart-drawer-modern__empty-btn">
+            Add some items to your cart
+          </a>
+        </div>
+
+        <!-- Product Recommendations - Based on Recently Viewed -->
+        <div class="cart-drawer-modern__recommendations" id="cart-recently-viewed" style="display: none;">
+          <h4 class="cart-drawer-modern__recommendations-title">Recently Viewed</h4>
+          <div class="cart-drawer-modern__recommendations-list" id="cart-recommendations">
+            <!-- Products will be loaded via JavaScript from browsing history -->
+          </div>
+        </div>
+      </div>
+    {%- endif -%}
+
+  </div>
+</cart-drawer-modern>
+
+<script src="{{ 'cart-drawer-modern.js' | asset_url }}" defer="defer"></script>
