@@ -21,6 +21,7 @@ class CartDrawerModern extends HTMLElement {
     this.activeElement = null;
     this.eventsBound = false;
     this.cartUpdateUnsubscriber = undefined;
+    this.savedScrollPosition = 0;
 
     this.bindEvents();
     this.setupHeaderCartIcon();
@@ -100,8 +101,37 @@ class CartDrawerModern extends HTMLElement {
     // Re-bind events after updating content
     this.rebindAfterRender();
 
-    // Open the drawer
-    setTimeout(() => this.open(), 100);
+    // On mobile, don't open drawer - just show sticky header
+    // On desktop, open the drawer as usual
+    const isMobile = window.matchMedia('(max-width: 749px)').matches;
+    if (isMobile) {
+      // On mobile, reveal the sticky header instead of opening drawer
+      this.revealStickyHeader();
+    } else {
+      // Open the drawer on desktop
+      setTimeout(() => this.open(), 100);
+    }
+  }
+
+  // Reveal sticky header on mobile after adding to cart
+  revealStickyHeader() {
+    const stickyHeader = document.querySelector('sticky-header');
+    const header = document.querySelector('.section-header');
+    
+    if (stickyHeader && header) {
+      // Force reveal the sticky header
+      header.classList.add('shopify-section-header-sticky', 'animate');
+      header.classList.remove('shopify-section-header-hidden');
+      
+      // Also add a temporary highlight to cart icon
+      const cartIcon = document.querySelector('#cart-icon-bubble');
+      if (cartIcon) {
+        cartIcon.classList.add('cart-icon-pulse');
+        setTimeout(() => {
+          cartIcon.classList.remove('cart-icon-pulse');
+        }, 2000);
+      }
+    }
   }
 
   rebindAfterRender() {
@@ -274,9 +304,15 @@ class CartDrawerModern extends HTMLElement {
   open() {
     if (this.isOpen) return;
 
+    // Save current scroll position before locking body
+    this.savedScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    
     this.isOpen = true;
     this.classList.add('is-open');
     document.body.classList.add('cart-drawer-open');
+    
+    // Apply scroll position as negative top to maintain visual position
+    document.body.style.top = `-${this.savedScrollPosition}px`;
 
     // Focus management
     const firstFocusable = this.querySelector(
@@ -294,6 +330,10 @@ class CartDrawerModern extends HTMLElement {
     this.isOpen = false;
     this.classList.remove('is-open');
     document.body.classList.remove('cart-drawer-open');
+    
+    // Remove the negative top and restore scroll position
+    document.body.style.top = '';
+    window.scrollTo(0, this.savedScrollPosition);
 
     // Return focus to cart icon
     const cartIcon = document.querySelector('#cart-icon-bubble');

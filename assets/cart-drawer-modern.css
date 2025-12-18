@@ -1139,3 +1139,30 @@ body.cart-drawer-open {
   touch-action: none;
   -webkit-overflow-scrolling: none;
 }
+
+/* ============================================
+   CART ICON PULSE ANIMATION (Mobile Add to Cart)
+   ============================================ */
+
+@keyframes cartIconPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.2);
+  }
+  50% {
+    transform: scale(1);
+  }
+  75% {
+    transform: scale(1.15);
+  }
+}
+
+#cart-icon-bubble.cart-icon-pulse {
+  animation: cartIconPulse 0.6s ease-in-out;
+}
+
+#cart-icon-bubble.cart-icon-pulse .cart-count-bubble {
+  animation: cartIconPulse 0.6s ease-in-out 0.1s;
+}

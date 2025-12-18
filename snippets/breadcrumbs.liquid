@@ -15,17 +15,61 @@
     </li>
 
     {% if template.name == 'product' %}
-      {% if collection %}
+      {%- comment -%}
+        Determine the correct collection to show in breadcrumbs.
+        Priority:
+        1. Collection from URL context (when navigating from a collection page)
+        2. Collection from the product's collection list (fallback)
+      {%- endcomment -%}
+      {%- liquid
+        assign breadcrumb_collection = nil
+        
+        # Check if there's a collection context from the URL
+        if collection
+          assign breadcrumb_collection = collection
+        else
+          # Try to find the collection from the canonical URL or request path
+          # This handles cases where the product was accessed via /collections/X/products/Y
+          assign request_path = request.path
+          if request_path contains '/collections/'
+            assign path_parts = request_path | split: '/collections/'
+            if path_parts.size > 1
+              assign collection_part = path_parts[1] | split: '/products/' | first
+              if collection_part != blank
+                # Try to find this collection
+                for prod_collection in product.collections
+                  if prod_collection.handle == collection_part
+                    assign breadcrumb_collection = prod_collection
+                    break
+                  endif
+                endfor
+              endif
+            endif
+          endif
+          
+          # Fallback to a non-"newest" collection if available
+          if breadcrumb_collection == nil and product.collections.size > 0
+            for prod_collection in product.collections
+              # Skip collections that might be auto-generated like "Newest" or "All"
+              assign lower_handle = prod_collection.handle | downcase
+              unless lower_handle == 'newest' or lower_handle == 'all' or lower_handle == 'frontpage'
+                assign breadcrumb_collection = prod_collection
+                break
+              endunless
+            endfor
+            
+            # If all collections are generic, use the first one anyway
+            if breadcrumb_collection == nil
+              assign breadcrumb_collection = product.collections.first
+            endif
+          endif
+        endif
+      -%}
+      
+      {% if breadcrumb_collection %}
         <li class="breadcrumbs__item">
-          <a href="{{ collection.url }}" class="breadcrumbs__link">
-            {{ collection.title }}
-          </a>
-          <span class="breadcrumbs__separator" aria-hidden="true">›</span>
-        </li>
-      {% elsif product.collections.size > 0 %}
-        <li class="breadcrumbs__item">
-          <a href="{{ product.collections.first.url }}" class="breadcrumbs__link">
-            {{ product.collections.first.title }}
+          <a href="{{ breadcrumb_collection.url }}" class="breadcrumbs__link">
+            {{ breadcrumb_collection.title }}
           </a>
           <span class="breadcrumbs__separator" aria-hidden="true">›</span>
         </li>
