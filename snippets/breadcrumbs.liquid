@@ -5,8 +5,8 @@
   {% render 'breadcrumbs' %}
 {% endcomment %}
 
-<nav class="breadcrumbs" role="navigation" aria-label="Breadcrumb">
-  <ol class="breadcrumbs__list">
+<nav class="breadcrumbs" role="navigation" aria-label="Breadcrumb" id="breadcrumbs-nav" {% if template.name == 'product' %}style="display: none;"{% endif %}>
+  <ol class="breadcrumbs__list" id="breadcrumbs-list">
     <li class="breadcrumbs__item">
       <a href="{{ routes.root_url }}" class="breadcrumbs__link">
         Home
@@ -16,81 +16,44 @@
 
     {% if template.name == 'product' %}
       {%- comment -%}
-        Determine the correct collection to show in breadcrumbs.
-        Priority:
-        1. Collection from URL context (when navigating from a collection page)
-        2. Collection from the product's collection list (fallback)
+        Show breadcrumb only if user came from a collection page (stored in sessionStorage).
+        If no sessionStorage data, hide the entire breadcrumb.
       {%- endcomment -%}
-      {%- liquid
-        assign breadcrumb_collection = nil
-        
-        # Check if there's a collection context from the URL
-        if collection
-          # Skip collections that might be auto-generated like "Newest" or "All"
-          assign lower_handle = collection.handle | downcase
-          unless lower_handle == 'newest' or lower_handle == 'all' or lower_handle == 'frontpage'
-            assign breadcrumb_collection = collection
-          endunless
-        endif
-
-        # If we still don't have a collection (either no context or context was generic)
-        if breadcrumb_collection == nil
-          # Try to find the collection from the request path
-          # This handles cases where the product was accessed via /collections/X/products/Y
-          assign request_path = request.path
-          if request_path contains '/collections/'
-            assign path_parts = request_path | split: '/collections/'
-            if path_parts.size > 1
-              assign collection_part = path_parts[1] | split: '/products/' | first
-              if collection_part != blank
-                # Try to find this collection
-                for prod_collection in product.collections
-                  if prod_collection.handle == collection_part
-                    assign lower_handle = prod_collection.handle | downcase
-                    unless lower_handle == 'newest' or lower_handle == 'all' or lower_handle == 'frontpage'
-                      assign breadcrumb_collection = prod_collection
-                      break
-                    endunless
-                  endif
-                endfor
-              endif
-            endif
-          endif
-          
-          # Fallback to a non-generic collection from the product's assigned collections
-          if breadcrumb_collection == nil and product.collections.size > 0
-            for prod_collection in product.collections
-              # Skip collections that might be auto-generated
-              assign lower_handle = prod_collection.handle | downcase
-              unless lower_handle == 'newest' or lower_handle == 'all' or lower_handle == 'frontpage'
-                assign breadcrumb_collection = prod_collection
-                break
-              endunless
-            endfor
-            
-            # If all else fails and we still have no collection but the product HAS collections,
-            # use the contextual one (even if generic) or the first one as an absolute last resort.
-            if breadcrumb_collection == nil
-              assign breadcrumb_collection = collection | default: product.collections.first
-            endif
-          endif
-        endif
-      -%}
       
-      {% if breadcrumb_collection %}
-        <li class="breadcrumbs__item">
-          <a href="{{ breadcrumb_collection.url }}" class="breadcrumbs__link">
-            {{ breadcrumb_collection.title }}
-          </a>
-          <span class="breadcrumbs__separator" aria-hidden="true">›</span>
-        </li>
-      {% endif %}
+      {%- comment -%} Placeholder for collection breadcrumb - will be populated by JS {%- endcomment -%}
+      <li class="breadcrumbs__item breadcrumbs__item--collection" id="breadcrumb-collection">
+        <a href="" class="breadcrumbs__link" id="breadcrumb-collection-link"></a>
+        <span class="breadcrumbs__separator" aria-hidden="true">›</span>
+      </li>
       
       <li class="breadcrumbs__item breadcrumbs__item--current">
         <span class="breadcrumbs__text" aria-current="page">
           {{ product.title }}
         </span>
       </li>
+      
+      <script>
+        (function() {
+          try {
+            const stored = sessionStorage.getItem('breadcrumb_collection');
+            if (stored) {
+              const collectionData = JSON.parse(stored);
+              const breadcrumbNav = document.getElementById('breadcrumbs-nav');
+              const collectionLink = document.getElementById('breadcrumb-collection-link');
+              
+              if (breadcrumbNav && collectionLink && collectionData.title && collectionData.url) {
+                // Populate and show the breadcrumb
+                collectionLink.href = collectionData.url;
+                collectionLink.textContent = collectionData.title;
+                breadcrumbNav.style.display = '';
+              }
+            }
+            // If no stored data, breadcrumb stays hidden
+          } catch (err) {
+            // sessionStorage unavailable or parse error - breadcrumb stays hidden
+          }
+        })();
+      </script>
 
     {% elsif template.name == 'collection' %}
       <li class="breadcrumbs__item breadcrumbs__item--current">

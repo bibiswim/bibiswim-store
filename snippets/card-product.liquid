@@ -16,6 +16,7 @@
   - horizontal_class: {Boolean} Add a card--horizontal class if set to true. Default: false (optional)
   - horizontal_quick_add: {Boolean} Changes the quick add button styles when set to true. Default: false (optional)
   - placeholder_image: {String} The placeholder image to use when no product exists. Default: 'product-apparel-2' (optional)
+  - card_collection: {Object} Collection object for breadcrumb context (optional)
 
   Usage:
   {% render 'card-product', show_vendor: section.settings.show_vendor %}
@@ -40,8 +41,22 @@
     if ratio == 0 or ratio == null
       assign ratio = 1
     endif
+    
+    # Determine the collection context for breadcrumbs
+    assign breadcrumb_collection = nil
+    if card_collection
+      assign breadcrumb_collection = card_collection
+    elsif collection
+      assign breadcrumb_collection = collection
+    endif
   -%}
-  <div class="card-wrapper product-card-wrapper underline-links-hover">
+  <div class="card-wrapper product-card-wrapper underline-links-hover"
+    {% if breadcrumb_collection %}
+      data-collection-handle="{{ breadcrumb_collection.handle }}"
+      data-collection-title="{{ breadcrumb_collection.title | escape }}"
+      data-collection-url="{{ breadcrumb_collection.url }}"
+    {% endif %}
+  >
     <div
       class="
         card card--{{ settings.card_style }}
@@ -705,3 +720,38 @@
     </div>
   </div>
 {%- endif -%}
+
+{% comment %} Store collection context for breadcrumbs when clicking product links {% endcomment %}
+<script>
+  (function() {
+    // Only run once per page load
+    if (window.__collectionContextInitialized) return;
+    window.__collectionContextInitialized = true;
+    
+    // Store collection context when clicking any product link
+    document.addEventListener('click', function(e) {
+      const productLink = e.target.closest('a[href*="/products/"]');
+      if (productLink) {
+        // Find the parent card-wrapper with collection data
+        const cardWrapper = productLink.closest('.card-wrapper[data-collection-handle]');
+        if (cardWrapper) {
+          const collectionHandle = cardWrapper.dataset.collectionHandle;
+          const collectionTitle = cardWrapper.dataset.collectionTitle;
+          const collectionUrl = cardWrapper.dataset.collectionUrl;
+          
+          if (collectionHandle && collectionTitle && collectionUrl) {
+            try {
+              sessionStorage.setItem('breadcrumb_collection', JSON.stringify({
+                handle: collectionHandle,
+                title: collectionTitle,
+                url: collectionUrl
+              }));
+            } catch (err) {
+              // sessionStorage might be unavailable in private browsing
+            }
+          }
+        }
+      }
+    });
+  })();
+</script>

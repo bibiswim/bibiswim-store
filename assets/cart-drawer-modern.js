@@ -82,7 +82,7 @@ class CartDrawerModern extends HTMLElement {
         }
         return;
       }
-      
+
       const sectionElement = section.selector
         ? document.querySelector(section.selector)
         : document.getElementById(section.id);
@@ -117,12 +117,12 @@ class CartDrawerModern extends HTMLElement {
   revealStickyHeader() {
     const stickyHeader = document.querySelector('sticky-header');
     const header = document.querySelector('.section-header');
-    
+
     if (stickyHeader && header) {
       // Force reveal the sticky header
       header.classList.add('shopify-section-header-sticky', 'animate');
       header.classList.remove('shopify-section-header-hidden');
-      
+
       // Also add a temporary highlight to cart icon
       const cartIcon = document.querySelector('#cart-icon-bubble');
       if (cartIcon) {
@@ -271,7 +271,7 @@ class CartDrawerModern extends HTMLElement {
       const cartResponse = await fetch('/cart.js');
       const cart = await cartResponse.json();
       this.updateHeaderCartCount(cart.item_count);
-      
+
       // Dispatch events for cross-component synchronization
       this.dispatchCartUpdatedEvents(cart);
     } catch (error) {
@@ -307,11 +307,11 @@ class CartDrawerModern extends HTMLElement {
     // Save current scroll position before locking body
     // Using both pageYOffset and documentElement.scrollTop for maximum compatibility
     this.savedScrollPosition = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
-    
+
     this.isOpen = true;
     this.classList.add('is-open');
     document.body.classList.add('cart-drawer-open');
-    
+
     // Apply scroll position as negative top to maintain visual position
     // This works in tandem with body.cart-drawer-open { position: fixed }
     document.body.style.top = `-${this.savedScrollPosition}px`;
@@ -331,26 +331,39 @@ class CartDrawerModern extends HTMLElement {
 
     this.isOpen = false;
     this.classList.remove('is-open');
-    
+
     const scrollPos = this.savedScrollPosition;
-    
+
+    // Temporarily disable smooth scrolling to prevent any scroll animation
+    const htmlEl = document.documentElement;
+    const originalScrollBehavior = htmlEl.style.scrollBehavior;
+    htmlEl.style.scrollBehavior = 'auto';
+
     // Remove the negative top AND the class
     document.body.classList.remove('cart-drawer-open');
     document.body.style.top = '';
-    
-    // Use requestAnimationFrame to let browser re-calculate layout without position:fixed
-    // before we jump back to the original scroll position
+
+    // Immediately restore scroll position before browser can recalculate
+    window.scrollTo(0, scrollPos);
+
+    // Use double requestAnimationFrame to ensure scroll is applied after layout
     window.requestAnimationFrame(() => {
-      window.scrollTo(0, scrollPos);
-      
-      // Return focus to cart icon AFTER scroll to avoid jump-back from focus
-      const cartIcon = document.querySelector('#cart-icon-bubble');
-      if (cartIcon) {
-        // Use preventScroll if supported to avoid browser jumping to the element
-        if (typeof cartIcon.focus === 'function') {
-           cartIcon.focus({ preventScroll: true });
+      window.requestAnimationFrame(() => {
+        // Ensure scroll position is exactly where we want it
+        window.scrollTo(0, scrollPos);
+
+        // Restore original scroll behavior
+        htmlEl.style.scrollBehavior = originalScrollBehavior;
+
+        // Return focus to cart icon AFTER scroll to avoid jump-back from focus
+        const cartIcon = document.querySelector('#cart-icon-bubble');
+        if (cartIcon) {
+          // Use preventScroll if supported to avoid browser jumping to the element
+          if (typeof cartIcon.focus === 'function') {
+            cartIcon.focus({ preventScroll: true });
+          }
         }
-      }
+      });
     });
   }
 
@@ -476,7 +489,7 @@ class CartDrawerModern extends HTMLElement {
 
       // Update header cart icon
       this.updateHeaderCartCount(cart.item_count);
-      
+
       // Dispatch events for cross-component synchronization
       this.dispatchCartUpdatedEvents(cart);
     } catch (error) {
@@ -525,7 +538,7 @@ class CartDrawerModern extends HTMLElement {
       const cart = await response.json();
       this.updateCartUI(cart);
       this.updateHeaderCartCount(cart.item_count);
-      
+
       // Dispatch events for cross-component synchronization
       this.dispatchCartUpdatedEvents(cart);
     } catch (error) {
@@ -541,15 +554,17 @@ class CartDrawerModern extends HTMLElement {
   // Dispatch events to sync cart state across all components
   dispatchCartUpdatedEvents(cart) {
     // Dispatch custom event for other components listening
-    document.dispatchEvent(new CustomEvent('cart:updated', { 
-      detail: { cart, source: 'cart-drawer-modern' }
-    }));
-    
+    document.dispatchEvent(
+      new CustomEvent('cart:updated', {
+        detail: { cart, source: 'cart-drawer-modern' },
+      })
+    );
+
     // Publish to PubSub system if available (syncs with cart page)
     if (typeof publish === 'function' && typeof PUB_SUB_EVENTS !== 'undefined') {
       publish(PUB_SUB_EVENTS.cartUpdate, {
         source: 'cart-drawer-modern',
-        cartData: cart
+        cartData: cart,
       });
     }
   }
@@ -657,26 +672,28 @@ class CartDrawerModern extends HTMLElement {
 
     let countBubble = cartIcon.querySelector('.cart-count-bubble');
     const svgWrapper = cartIcon.querySelector('.svg-wrapper');
-    
+
     // Empty cart SVG
-    const emptyCartSvg = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" class="icon icon-cart-empty" viewBox="0 0 40 40"><path fill="currentColor" fill-rule="evenodd" d="M15.75 11.8h-3.16l-.77 11.6a5 5 0 0 0 4.99 5.34h7.38a5 5 0 0 0 4.99-5.33L28.4 11.8zm0 1h-2.22l-.71 10.67a4 4 0 0 0 3.99 4.27h7.38a4 4 0 0 0 4-4.27l-.72-10.67h-2.22v.63a4.75 4.75 0 1 1-9.5 0zm8.5 0h-7.5v.63a3.75 3.75 0 1 0 7.5 0z"/></svg>';
-    
+    const emptyCartSvg =
+      '<svg xmlns="http://www.w3.org/2000/svg" fill="none" class="icon icon-cart-empty" viewBox="0 0 40 40"><path fill="currentColor" fill-rule="evenodd" d="M15.75 11.8h-3.16l-.77 11.6a5 5 0 0 0 4.99 5.34h7.38a5 5 0 0 0 4.99-5.33L28.4 11.8zm0 1h-2.22l-.71 10.67a4 4 0 0 0 3.99 4.27h7.38a4 4 0 0 0 4-4.27l-.72-10.67h-2.22v.63a4.75 4.75 0 1 1-9.5 0zm8.5 0h-7.5v.63a3.75 3.75 0 1 0 7.5 0z"/></svg>';
+
     // Filled cart SVG
-    const filledCartSvg = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" class="icon icon-cart" viewBox="0 0 40 40"><path fill="currentColor" fill-rule="evenodd" d="M20.5 6.5a4.75 4.75 0 0 0-4.75 4.75v.56h-3.16l-.77 11.6a5 5 0 0 0 4.99 5.34h7.38a5 5 0 0 0 4.99-5.33l-.77-11.6h-3.16v-.57A4.75 4.75 0 0 0 20.5 6.5m3.75 5.31v-.56a3.75 3.75 0 1 0-7.5 0v.56zm-7.5 1h7.5v.56a3.75 3.75 0 1 1-7.5 0zm-1 0v.56a4.75 4.75 0 1 0 9.5 0v-.56h2.22l.71 10.67a4 4 0 0 1-3.99 4.27h-7.38a4 4 0 0 1-4-4.27l.72-10.67z"/></svg>';
-    
+    const filledCartSvg =
+      '<svg xmlns="http://www.w3.org/2000/svg" fill="none" class="icon icon-cart" viewBox="0 0 40 40"><path fill="currentColor" fill-rule="evenodd" d="M20.5 6.5a4.75 4.75 0 0 0-4.75 4.75v.56h-3.16l-.77 11.6a5 5 0 0 0 4.99 5.34h7.38a5 5 0 0 0 4.99-5.33l-.77-11.6h-3.16v-.57A4.75 4.75 0 0 0 20.5 6.5m3.75 5.31v-.56a3.75 3.75 0 1 0-7.5 0v.56zm-7.5 1h7.5v.56a3.75 3.75 0 1 1-7.5 0zm-1 0v.56a4.75 4.75 0 1 0 9.5 0v-.56h2.22l.71 10.67a4 4 0 0 1-3.99 4.27h-7.38a4 4 0 0 1-4-4.27l.72-10.67z"/></svg>';
+
     if (count > 0) {
       // Update SVG to filled cart icon
       if (svgWrapper) {
         svgWrapper.innerHTML = filledCartSvg;
       }
-      
+
       // Create bubble if it doesn't exist (e.g., cart was empty before)
       if (!countBubble) {
         countBubble = document.createElement('div');
         countBubble.className = 'cart-count-bubble';
         cartIcon.appendChild(countBubble);
       }
-      
+
       countBubble.innerHTML = `
         <span aria-hidden="true">${count < 100 ? count : '99+'}</span>
         <span class="visually-hidden">${count} items</span>
@@ -688,7 +705,7 @@ class CartDrawerModern extends HTMLElement {
       if (svgWrapper) {
         svgWrapper.innerHTML = emptyCartSvg;
       }
-      
+
       // Remove bubble completely when cart is empty
       if (countBubble) {
         countBubble.remove();
@@ -833,7 +850,11 @@ function loadRecentlyViewedProducts() {
           aria-label="Add ${product.title} to cart"
           ${!product.available ? 'disabled' : ''}
         >
-          ${product.available ? '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>' : '<span class="sold-out-text">SOLD OUT</span>'}
+          ${
+            product.available
+              ? '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>'
+              : '<span class="sold-out-text">SOLD OUT</span>'
+          }
         </button>
       </form>
     </div>
