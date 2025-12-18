@@ -347,13 +347,129 @@ class QuantityInput extends HTMLElement {
       const isAtMax = value >= remainingAvailable || remainingAvailable <= 0;
       buttonPlus.classList.toggle('disabled', isAtMax);
       buttonPlus.disabled = isAtMax;
+      
+      // Set up or remove hover tooltip for max quantity message
+      this.updatePlusButtonTooltip(buttonPlus, isAtMax, dataMax, cartQuantity, remainingAvailable);
     } else if (buttonPlus && this.input.max) {
       // Fallback to simple max check
       const max = parseInt(this.input.max);
       const isAtMax = value >= max;
       buttonPlus.classList.toggle('disabled', isAtMax);
       buttonPlus.disabled = isAtMax;
+      
+      // Set up or remove hover tooltip for max quantity message
+      this.updatePlusButtonTooltip(buttonPlus, isAtMax, max, 0, max - value);
+    } else if (buttonPlus) {
+      // Remove tooltip if there's no max
+      this.removePlusButtonTooltip(buttonPlus);
     }
+  }
+
+  updatePlusButtonTooltip(button, isAtMax, maxQty, cartQty, remaining) {
+    // Remove existing event listeners if any
+    if (button._tooltipMouseEnter) {
+      button.removeEventListener('mouseenter', button._tooltipMouseEnter);
+      button.removeEventListener('mouseleave', button._tooltipMouseLeave);
+    }
+
+    if (isAtMax) {
+      // Generate the tooltip message
+      let message = '';
+      if (cartQty > 0 && remaining <= 0) {
+        message = `Maximum quantity (${maxQty}) already in cart`;
+      } else if (remaining <= 0) {
+        message = `Maximum quantity is ${maxQty}`;
+      } else {
+        message = `Only ${remaining} more available`;
+      }
+
+      // Store references for cleanup
+      button._tooltipMessage = message;
+      
+      button._tooltipMouseEnter = () => this.showButtonTooltip(button, message);
+      button._tooltipMouseLeave = () => this.hideButtonTooltip(button);
+      
+      button.addEventListener('mouseenter', button._tooltipMouseEnter);
+      button.addEventListener('mouseleave', button._tooltipMouseLeave);
+    } else {
+      this.removePlusButtonTooltip(button);
+    }
+  }
+
+  removePlusButtonTooltip(button) {
+    if (button._tooltipMouseEnter) {
+      button.removeEventListener('mouseenter', button._tooltipMouseEnter);
+      button.removeEventListener('mouseleave', button._tooltipMouseLeave);
+      delete button._tooltipMouseEnter;
+      delete button._tooltipMouseLeave;
+      delete button._tooltipMessage;
+    }
+    // Remove any existing tooltip
+    this.hideButtonTooltip(button);
+  }
+
+  showButtonTooltip(button, message) {
+    // Remove any existing tooltip
+    this.hideButtonTooltip(button);
+    
+    // Create tooltip element
+    const tooltip = document.createElement('div');
+    tooltip.className = 'quantity-max-tooltip';
+    tooltip.textContent = message;
+    tooltip.style.cssText = `
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgb(var(--color-foreground));
+      color: rgb(var(--color-background));
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      z-index: 100;
+      margin-bottom: 8px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    `;
+    
+    // Position container relatively if not already
+    if (getComputedStyle(this).position === 'static') {
+      this.style.position = 'relative';
+    }
+    
+    this.appendChild(tooltip);
+    
+    // Add arrow
+    const arrow = document.createElement('div');
+    arrow.style.cssText = `
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: rgb(var(--color-foreground));
+    `;
+    tooltip.appendChild(arrow);
+    
+    // Trigger reflow and fade in
+    requestAnimationFrame(() => {
+      tooltip.style.opacity = '1';
+    });
+    
+    // Store reference on button for removal
+    button._activeTooltip = tooltip;
+  }
+
+  hideButtonTooltip(button) {
+    if (button._activeTooltip) {
+      button._activeTooltip.remove();
+      delete button._activeTooltip;
+    }
+    // Also check for any orphaned tooltips
+    const existingTooltip = this.querySelector('.quantity-max-tooltip');
+    if (existingTooltip) existingTooltip.remove();
   }
 }
 
