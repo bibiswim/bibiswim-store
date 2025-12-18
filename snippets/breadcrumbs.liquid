@@ -26,9 +26,16 @@
         
         # Check if there's a collection context from the URL
         if collection
-          assign breadcrumb_collection = collection
-        else
-          # Try to find the collection from the canonical URL or request path
+          # Skip collections that might be auto-generated like "Newest" or "All"
+          assign lower_handle = collection.handle | downcase
+          unless lower_handle == 'newest' or lower_handle == 'all' or lower_handle == 'frontpage'
+            assign breadcrumb_collection = collection
+          endunless
+        endif
+
+        # If we still don't have a collection (either no context or context was generic)
+        if breadcrumb_collection == nil
+          # Try to find the collection from the request path
           # This handles cases where the product was accessed via /collections/X/products/Y
           assign request_path = request.path
           if request_path contains '/collections/'
@@ -39,18 +46,21 @@
                 # Try to find this collection
                 for prod_collection in product.collections
                   if prod_collection.handle == collection_part
-                    assign breadcrumb_collection = prod_collection
-                    break
+                    assign lower_handle = prod_collection.handle | downcase
+                    unless lower_handle == 'newest' or lower_handle == 'all' or lower_handle == 'frontpage'
+                      assign breadcrumb_collection = prod_collection
+                      break
+                    endunless
                   endif
                 endfor
               endif
             endif
           endif
           
-          # Fallback to a non-"newest" collection if available
+          # Fallback to a non-generic collection from the product's assigned collections
           if breadcrumb_collection == nil and product.collections.size > 0
             for prod_collection in product.collections
-              # Skip collections that might be auto-generated like "Newest" or "All"
+              # Skip collections that might be auto-generated
               assign lower_handle = prod_collection.handle | downcase
               unless lower_handle == 'newest' or lower_handle == 'all' or lower_handle == 'frontpage'
                 assign breadcrumb_collection = prod_collection
@@ -58,9 +68,10 @@
               endunless
             endfor
             
-            # If all collections are generic, use the first one anyway
+            # If all else fails and we still have no collection but the product HAS collections,
+            # use the contextual one (even if generic) or the first one as an absolute last resort.
             if breadcrumb_collection == nil
-              assign breadcrumb_collection = product.collections.first
+              assign breadcrumb_collection = collection | default: product.collections.first
             endif
           endif
         endif
