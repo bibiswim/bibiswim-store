@@ -305,13 +305,15 @@ class CartDrawerModern extends HTMLElement {
     if (this.isOpen) return;
 
     // Save current scroll position before locking body
-    this.savedScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+    // Using both pageYOffset and documentElement.scrollTop for maximum compatibility
+    this.savedScrollPosition = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
     
     this.isOpen = true;
     this.classList.add('is-open');
     document.body.classList.add('cart-drawer-open');
     
     // Apply scroll position as negative top to maintain visual position
+    // This works in tandem with body.cart-drawer-open { position: fixed }
     document.body.style.top = `-${this.savedScrollPosition}px`;
 
     // Focus management
@@ -329,15 +331,27 @@ class CartDrawerModern extends HTMLElement {
 
     this.isOpen = false;
     this.classList.remove('is-open');
-    document.body.classList.remove('cart-drawer-open');
     
-    // Remove the negative top and restore scroll position
+    const scrollPos = this.savedScrollPosition;
+    
+    // Remove the negative top AND the class
+    document.body.classList.remove('cart-drawer-open');
     document.body.style.top = '';
-    window.scrollTo(0, this.savedScrollPosition);
-
-    // Return focus to cart icon
-    const cartIcon = document.querySelector('#cart-icon-bubble');
-    cartIcon?.focus();
+    
+    // Use requestAnimationFrame to let browser re-calculate layout without position:fixed
+    // before we jump back to the original scroll position
+    window.requestAnimationFrame(() => {
+      window.scrollTo(0, scrollPos);
+      
+      // Return focus to cart icon AFTER scroll to avoid jump-back from focus
+      const cartIcon = document.querySelector('#cart-icon-bubble');
+      if (cartIcon) {
+        // Use preventScroll if supported to avoid browser jumping to the element
+        if (typeof cartIcon.focus === 'function') {
+           cartIcon.focus({ preventScroll: true });
+        }
+      }
+    });
   }
 
   trapFocus() {
