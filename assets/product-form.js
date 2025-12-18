@@ -25,6 +25,29 @@ if (!customElements.get('product-form')) {
         evt.preventDefault();
         if (this.submitButton.getAttribute('aria-disabled') === 'true') return;
 
+        // Check if we're exceeding max quantity before submitting
+        const quantityInput = this.form.querySelector('input[name="quantity"]');
+        if (quantityInput) {
+          const requestedQty = parseInt(quantityInput.value) || 1;
+          const cartQty = parseInt(quantityInput.dataset.cartQuantity) || 0;
+          const maxQty = quantityInput.dataset.max ? parseInt(quantityInput.dataset.max) : null;
+          
+          if (maxQty !== null) {
+            const totalAfterAdd = cartQty + requestedQty;
+            if (totalAfterAdd > maxQty) {
+              const remaining = maxQty - cartQty;
+              let errorMsg = '';
+              if (remaining <= 0) {
+                errorMsg = `Maximum quantity (${maxQty}) already in cart`;
+              } else {
+                errorMsg = `Only ${remaining} more available (${cartQty} already in cart)`;
+              }
+              this.handleErrorMessage(errorMsg);
+              return;
+            }
+          }
+        }
+
         this.handleErrorMessage();
 
         this.submitButton.setAttribute('aria-disabled', true);

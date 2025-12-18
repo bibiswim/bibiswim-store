@@ -332,11 +332,11 @@ class QuantityInput extends HTMLElement {
     const dataMax = this.input.dataset.max ? parseInt(this.input.dataset.max) : null;
     
     // Handle minus button
-    if (this.input.min) {
-      const buttonMinus = this.querySelector(".quantity__button[name='minus']");
-      if (buttonMinus) {
-        buttonMinus.classList.toggle('disabled', value <= parseInt(this.input.min));
-      }
+    const buttonMinus = this.querySelector(".quantity__button[name='minus']");
+    if (buttonMinus && this.input.min) {
+      const isAtMin = value <= parseInt(this.input.min);
+      buttonMinus.classList.toggle('disabled', isAtMin);
+      buttonMinus.disabled = isAtMin;
     }
     
     // Handle plus button - consider cart quantity for max calculation
@@ -344,12 +344,15 @@ class QuantityInput extends HTMLElement {
     if (buttonPlus && dataMax !== null) {
       // Calculate remaining available quantity
       const remainingAvailable = dataMax - cartQuantity;
-      const isAtMax = value >= remainingAvailable;
+      const isAtMax = value >= remainingAvailable || remainingAvailable <= 0;
       buttonPlus.classList.toggle('disabled', isAtMax);
+      buttonPlus.disabled = isAtMax;
     } else if (buttonPlus && this.input.max) {
       // Fallback to simple max check
       const max = parseInt(this.input.max);
-      buttonPlus.classList.toggle('disabled', value >= max);
+      const isAtMax = value >= max;
+      buttonPlus.classList.toggle('disabled', isAtMax);
+      buttonPlus.disabled = isAtMax;
     }
   }
 }
