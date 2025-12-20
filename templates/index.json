@@ -85,6 +85,7 @@
     },
     "image_banner_VWBAiQ": {
       "type": "image-banner",
+      "disabled": true,
       "name": "t:sections.image-banner.presets.name",
       "settings": {
         "image": "shopify://shop_images/Mermaid_Fantasy.png",
@@ -144,6 +145,7 @@
         "slide_nYLeWF",
         "slide_GAmXJe"
       ],
+      "disabled": true,
       "name": "t:sections.slideshow.presets.name",
       "settings": {
         "layout": "full_bleed",
@@ -444,13 +446,13 @@
   },
   "order": [
     "top_navigation_RKYUxD",
+    "image_banner_epD4x9",
     "image_banner_VWBAiQ",
     "slideshow_qKqtq6",
     "image_banner",
     "category_navigation_FTCb79",
     "featured_collection_7rLAGB",
     "featured_collection_Fn6Xj8",
-    "image_banner_epD4x9",
     "featured_collection_HHAhh7",
     "featured_collection_kPWtfQ",
     "image_banner_CwjXtz",
