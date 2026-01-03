@@ -83,9 +83,26 @@
         "color_scheme": "scheme-2c010289-6033-4712-a74d-b18cf7dbf7f9"
       }
     },
-    "image_banner_VWBAiQ": {
+    "image_banner_epD4x9": {
       "type": "image-banner",
       "disabled": true,
+      "name": "Swimming Categories",
+      "settings": {
+        "image": "shopify://shop_images/Swimming_Categories.webp",
+        "image_overlay_opacity": 0,
+        "image_height": "adapt",
+        "image_behavior": "none",
+        "desktop_content_position": "middle-center",
+        "desktop_content_alignment": "center",
+        "show_text_box": true,
+        "color_scheme": "scheme-2c010289-6033-4712-a74d-b18cf7dbf7f9",
+        "stack_images_on_mobile": true,
+        "mobile_content_alignment": "center",
+        "show_text_below": true
+      }
+    },
+    "image_banner_VWBAiQ": {
+      "type": "image-banner",
       "name": "t:sections.image-banner.presets.name",
       "settings": {
         "image": "shopify://shop_images/Mermaid_Fantasy.png",
@@ -326,23 +343,6 @@
         "swipe_on_mobile": false,
         "padding_top": 36,
         "padding_bottom": 36
-      }
-    },
-    "image_banner_epD4x9": {
-      "type": "image-banner",
-      "name": "Swimming Categories",
-      "settings": {
-        "image": "shopify://shop_images/Swimming_Categories.webp",
-        "image_overlay_opacity": 0,
-        "image_height": "adapt",
-        "image_behavior": "none",
-        "desktop_content_position": "middle-center",
-        "desktop_content_alignment": "center",
-        "show_text_box": true,
-        "color_scheme": "scheme-2c010289-6033-4712-a74d-b18cf7dbf7f9",
-        "stack_images_on_mobile": true,
-        "mobile_content_alignment": "center",
-        "show_text_below": true
       }
     },
     "featured_collection_HHAhh7": {
