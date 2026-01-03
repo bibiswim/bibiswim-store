@@ -376,6 +376,7 @@
     },
     "featured_collection_kPWtfQ": {
       "type": "featured-collection",
+      "disabled": true,
       "name": "Swimsuit",
       "settings": {
         "collection": "girl-swimsuit",
