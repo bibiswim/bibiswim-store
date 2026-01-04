@@ -345,6 +345,23 @@
         "padding_bottom": 36
       }
     },
+    "image_banner_BCQhzi": {
+      "type": "image-banner",
+      "name": "t:sections.image-banner.presets.name",
+      "settings": {
+        "image": "shopify://shop_images/SlideShow1.webp",
+        "image_overlay_opacity": 0,
+        "image_height": "adapt",
+        "image_behavior": "none",
+        "desktop_content_position": "middle-center",
+        "desktop_content_alignment": "center",
+        "show_text_box": true,
+        "color_scheme": "",
+        "stack_images_on_mobile": true,
+        "mobile_content_alignment": "center",
+        "show_text_below": true
+      }
+    },
     "featured_collection_HHAhh7": {
       "type": "featured-collection",
       "name": "Clearance Stock",
@@ -454,6 +471,7 @@
     "category_navigation_FTCb79",
     "featured_collection_Fn6Xj8",
     "featured_collection_7rLAGB",
+    "image_banner_BCQhzi",
     "featured_collection_HHAhh7",
     "featured_collection_kPWtfQ",
     "image_banner_CwjXtz",
