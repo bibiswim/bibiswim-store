@@ -22,7 +22,7 @@ if (!customElements.get('product-info')) {
 
         this.onVariantChangeUnsubscriber = subscribe(
           PUB_SUB_EVENTS.optionValueSelectionChange,
-          this.handleOptionValueChange.bind(this)
+          this.handleOptionValueChange.bind(this),
         );
 
         this.initQuantityHandlers();
@@ -52,7 +52,9 @@ if (!customElements.get('product-info')) {
 
       initializeProductSwapUtility() {
         this.preProcessHtmlCallbacks.push((html) =>
-          html.querySelectorAll('.scroll-trigger').forEach((element) => element.classList.add('scroll-trigger--cancel'))
+          html
+            .querySelectorAll('.scroll-trigger')
+            .forEach((element) => element.classList.add('scroll-trigger--cancel')),
         );
         this.postProcessHtmlCallbacks.push((newNode) => {
           window?.Shopify?.PaymentButton?.init();
@@ -100,14 +102,14 @@ if (!customElements.get('product-info')) {
               document.querySelector('main'),
               html.querySelector('main'),
               this.preProcessHtmlCallbacks,
-              this.postProcessHtmlCallbacks
+              this.postProcessHtmlCallbacks,
             );
           } else {
             HTMLUpdateUtility.viewTransition(
               this,
               html.querySelector('product-info'),
               this.preProcessHtmlCallbacks,
-              this.postProcessHtmlCallbacks
+              this.postProcessHtmlCallbacks,
             );
           }
         };
@@ -199,7 +201,7 @@ if (!customElements.get('product-info')) {
 
           this.productForm?.toggleSubmitButton(
             html.getElementById(`ProductSubmitButton-${this.sectionId}`)?.hasAttribute('disabled') ?? true,
-            window.variantStrings.soldOut
+            window.variantStrings.soldOut,
           );
 
           publish(PUB_SUB_EVENTS.variantChange, {
@@ -214,7 +216,7 @@ if (!customElements.get('product-info')) {
 
       updateVariantInputs(variantId) {
         this.querySelectorAll(
-          `#product-form-${this.dataset.section}, #product-form-installment-${this.dataset.section}`
+          `#product-form-${this.dataset.section}, #product-form-installment-${this.dataset.section}`,
         ).forEach((productForm) => {
           const input = productForm.querySelector('input[name="id"]');
           input.value = variantId ?? '';
@@ -224,7 +226,7 @@ if (!customElements.get('product-info')) {
 
       updateURL(url, variantId) {
         this.querySelector('share-button')?.updateUrl(
-          `${window.shopUrl}${url}${variantId ? `?variant=${variantId}` : ''}`
+          `${window.shopUrl}${url}${variantId ? `?variant=${variantId}` : ''}`,
         );
 
         if (this.dataset.updateUrl === 'false') return;
@@ -299,7 +301,7 @@ if (!customElements.get('product-info')) {
             const mediaGallerySourceItems = Array.from(mediaGallerySource.querySelectorAll('li[data-media-id]'));
             const sourceSet = new Set(mediaGallerySourceItems.map((item) => item.dataset.mediaId));
             const sourceMap = new Map(
-              mediaGallerySourceItems.map((item, index) => [item.dataset.mediaId, { item, index }])
+              mediaGallerySourceItems.map((item, index) => [item.dataset.mediaId, { item, index }]),
             );
             return [mediaGallerySourceItems, sourceSet, sourceMap];
           };
@@ -307,7 +309,7 @@ if (!customElements.get('product-info')) {
           if (mediaGallerySource && mediaGalleryDestination) {
             let [mediaGallerySourceItems, sourceSet, sourceMap] = refreshSourceData();
             const mediaGalleryDestinationItems = Array.from(
-              mediaGalleryDestination.querySelectorAll('li[data-media-id]')
+              mediaGalleryDestination.querySelectorAll('li[data-media-id]'),
             );
             const destinationSet = new Set(mediaGalleryDestinationItems.map(({ dataset }) => dataset.mediaId));
             let shouldRefresh = false;
@@ -338,7 +340,7 @@ if (!customElements.get('product-info')) {
               if (sourceData && sourceData.index !== destinationIndex) {
                 mediaGallerySource.insertBefore(
                   sourceData.item,
-                  mediaGallerySource.querySelector(`li:nth-of-type(${destinationIndex + 1})`)
+                  mediaGallerySource.querySelector(`li:nth-of-type(${destinationIndex + 1})`),
                 );
 
                 // refresh source now that it has been modified
@@ -459,7 +461,7 @@ if (!customElements.get('product-info')) {
       get relatedProducts() {
         const relatedProductsSectionId = SectionId.getIdForSection(
           SectionId.parseId(this.sectionId),
-          'related-products'
+          'related-products',
         );
         return document.querySelector(`product-recommendations[data-section-id^="${relatedProductsSectionId}"]`);
       }
@@ -467,7 +469,7 @@ if (!customElements.get('product-info')) {
       get quickOrderList() {
         const quickOrderListSectionId = SectionId.getIdForSection(
           SectionId.parseId(this.sectionId),
-          'quick_order_list'
+          'quick_order_list',
         );
         return document.querySelector(`quick-order-list[data-id^="${quickOrderListSectionId}"]`);
       }
@@ -475,6 +477,6 @@ if (!customElements.get('product-info')) {
       get sectionId() {
         return this.dataset.originalSection || this.dataset.section;
       }
-    }
+    },
   );
 }
