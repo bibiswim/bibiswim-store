@@ -1466,5 +1466,44 @@
         "default": "scheme-1"
       }
     ]
+  },
+  {
+    "name": "WhatsApp Button",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "whatsapp_enabled",
+        "label": "Enable WhatsApp Button",
+        "default": true
+      },
+      {
+        "type": "text",
+        "id": "whatsapp_number",
+        "label": "WhatsApp Number",
+        "info": "Format: Country code without + and without spaces (e.g., 15551234567)"
+      },
+      {
+        "type": "textarea",
+        "id": "whatsapp_message",
+        "label": "Pre-filled Message",
+        "default": "Hello, I have a question about your store."
+      },
+      {
+        "type": "select",
+        "id": "whatsapp_position",
+        "label": "Position",
+        "options": [
+          {
+            "value": "bottom-left",
+            "label": "Bottom Left"
+          },
+          {
+            "value": "bottom-right",
+            "label": "Bottom Right"
+          }
+        ],
+        "default": "bottom-right"
+      }
+    ]
   }
 ]
