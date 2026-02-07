@@ -103,7 +103,9 @@
   border: none;
   cursor: pointer;
   border-radius: 50%;
-  transition: background-color 0.2s ease, transform 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
   color: rgb(var(--color-foreground));
 }
 
@@ -239,13 +241,13 @@
   height: 120px;
   border-radius: 12px;
   overflow: hidden;
-  background-color: rgba(var(--color-foreground), 0.03);
+  background-color: transparent;
 }
 
 .cart-drawer-modern__item-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   transition: transform 0.3s ease;
 }
 
@@ -304,7 +306,9 @@
   border: none;
   cursor: pointer;
   border-radius: 50%;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
   color: rgba(var(--color-foreground), 0.4);
   margin-top: -4px;
   margin-right: -8px;
@@ -382,7 +386,9 @@
   border: none;
   cursor: pointer;
   color: rgb(var(--color-foreground));
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .cart-drawer-modern__quantity-btn:hover:not(:disabled) {
@@ -500,7 +506,9 @@
   letter-spacing: 0.05em;
   text-decoration: none;
   border-radius: 100px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .cart-drawer-modern__empty-btn:hover {
@@ -648,7 +656,10 @@
   border: none;
   border-radius: 100px;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
   text-decoration: none;
 }
 
@@ -740,7 +751,9 @@
   letter-spacing: 0.1em;
   text-decoration: none;
   border: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .cart-drawer-modern__empty-btn:hover {
@@ -786,7 +799,7 @@
 }
 
 .cart-drawer-modern__recommendation-item:hover {
-  background-color: rgba(var(--color-foreground), 0.02);
+  background-color: transparent;
 }
 
 .cart-drawer-modern__recommendation-item:last-child {
@@ -800,13 +813,13 @@
   height: 100px;
   border-radius: 6px;
   overflow: hidden;
-  background-color: rgba(var(--color-foreground), 0.03);
+  background-color: transparent;
 }
 
 .cart-drawer-modern__recommendation-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   transition: transform 0.3s ease;
 }
 
@@ -1076,7 +1089,9 @@
   justify-content: center;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.2s ease, visibility 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    visibility 0.2s ease;
   z-index: 10;
 }
 
@@ -1145,7 +1160,8 @@ body.cart-drawer-open {
    ============================================ */
 
 @keyframes cartIconPulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1);
   }
   25% {

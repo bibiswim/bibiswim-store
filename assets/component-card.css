@@ -310,6 +310,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.5;
+  min-height: 3em; /* Ensure 2 lines of space even for short titles */
 }
 
 .card__heading:last-child {
@@ -403,12 +404,16 @@
 }
 
 .card__heading a:focus:after {
-  box-shadow: 0 0 0 0.3rem rgb(var(--color-background)), 0 0 0.5rem 0.4rem rgba(var(--color-foreground), 0.3);
+  box-shadow:
+    0 0 0 0.3rem rgb(var(--color-background)),
+    0 0 0.5rem 0.4rem rgba(var(--color-foreground), 0.3);
   outline: 0.2rem solid rgba(var(--color-foreground), 0.5);
 }
 
 .card__heading a:focus-visible:after {
-  box-shadow: 0 0 0 0.3rem rgb(var(--color-background)), 0 0 0.5rem 0.4rem rgba(var(--color-foreground), 0.3);
+  box-shadow:
+    0 0 0 0.3rem rgb(var(--color-background)),
+    0 0 0.5rem 0.4rem rgba(var(--color-foreground), 0.3);
   outline: 0.2rem solid rgba(var(--color-foreground), 0.5);
 }
 
@@ -519,6 +524,12 @@
 .card-information > .price {
   color: rgb(var(--color-foreground));
   margin-bottom: 0.8rem;
+  font-size: 1.1em;
+}
+
+.card-information .price-item--sale,
+.card-information .price__regular .price-item--regular {
+  font-weight: bold;
 }
 
 .card__heading + .card-information {
