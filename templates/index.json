@@ -463,26 +463,6 @@
     },
     "1777260240f26d0645": {
       "type": "apps",
-      "blocks": {
-        "essential_loyalty_landing_page_faq_UMQKQB": {
-          "type": "shopify://apps/essential-loyalty/blocks/landing-page-faq/bb1b2244-edbc-4be2-b271-04fde65a5c2f",
-          "settings": {
-            "faq_background_color": "",
-            "faq_section_heading_color": "#000000",
-            "faq_section_text_color": "#000000",
-            "faq_section_accordion_text_color": "#000000",
-            "faq_section_question_background_color": "",
-            "faq_section_accordion_border_color": "#000000",
-            "faq_section_question_font_size": 16,
-            "faq_section_answer_font_size": 14,
-            "faq_section_question_font_size_mobile": 16,
-            "faq_section_answer_font_size_mobile": 14
-          }
-        }
-      },
-      "block_order": [
-        "essential_loyalty_landing_page_faq_UMQKQB"
-      ],
       "settings": {
         "include_margins": true
       }
