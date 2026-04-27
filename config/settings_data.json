@@ -160,6 +160,11 @@
           "disableBundledFonts": false,
           "useClassIsolator": false
         }
+      },
+      "15891388892413262111": {
+        "type": "shopify://apps/essential-loyalty/blocks/theme-extension/bb1b2244-edbc-4be2-b271-04fde65a5c2f",
+        "disabled": false,
+        "settings": {}
       }
     },
     "color_schemes": {
