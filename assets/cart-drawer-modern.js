@@ -740,32 +740,63 @@ class CartDrawerModern extends HTMLElement {
   }
 
   async refreshDrawer() {
-    try {
-      const response = await fetch('/?section_id=cart-drawer');
-      const html = await response.text();
+  try {
+    const response = await fetch('/?section_id=cart-drawer');
+    const html = await response.text();
 
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, 'text/html');
-      const newDrawer = doc.querySelector('cart-drawer-modern');
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const newDrawer = doc.querySelector('cart-drawer-modern');
 
-      if (newDrawer) {
+    if (newDrawer) {
+      const wasEmpty = this.classList.contains('is-empty');
+      const isNowEmpty = newDrawer.classList.contains('is-empty') ||
+                         !newDrawer.querySelector('[data-cart-items]');
+
+      if (isNowEmpty) {
+        // Cart is empty — full replace
         this.innerHTML = newDrawer.innerHTML;
-        this.bindEvents();
+        this.classList.add('is-empty');
 
-        // Reload recommendations after drawer refresh (especially for empty state)
-        if (typeof loadRecentlyViewedProducts === 'function') {
-          loadRecentlyViewedProducts();
-        }
+      } else if (wasEmpty) {
+        // Was empty, now has items — full replace needed
+        this.innerHTML = newDrawer.innerHTML;
+        this.classList.remove('is-empty');
+
+      } else {
+        // Cart had items and still has items — targeted update only
+        // This preserves the Honeypop widget sitting between elements
+        this.classList.remove('is-empty');
+
+        const targets = [
+          '[data-cart-items]',
+          '[data-shipping-progress]',
+          '[data-cart-count]',
+          '[data-cart-subtotal]',
+        ];
+
+        targets.forEach(selector => {
+          const newEl = newDrawer.querySelector(selector);
+          const currentEl = this.querySelector(selector);
+          if (newEl && currentEl) {
+            currentEl.innerHTML = newEl.innerHTML;
+            Array.from(newEl.attributes).forEach(attr => {
+              if (attr.name.startsWith('data-')) {
+                currentEl.setAttribute(attr.name, attr.value);
+              }
+            });
+          }
+        });
       }
-    } catch (error) {
-      console.error('Error refreshing drawer:', error);
-    }
-  }
 
-  // Method to be called when items are added to cart
-  async onCartUpdated() {
-    await this.refreshDrawer();
-    this.open();
+      this.bindEvents();
+
+      if (typeof loadRecentlyViewedProducts === 'function') {
+        loadRecentlyViewedProducts();
+      }
+    }
+  } catch (error) {
+    console.error('Error refreshing drawer:', error);
   }
 }
 
