@@ -406,9 +406,20 @@
       }
     }
 
+    function getQuantity() {
+      // Use the product form's quantity input specifically, not the cart drawer's
+      const productForm = honeypopEl.closest('form');
+      return parseInt(
+        productForm?.querySelector('.quantity__input[type="number"]')?.value ||
+        productForm?.querySelector('quantity-input input')?.value ||
+        1
+      );
+    }
+
     function refresh() {
-      const variantId = document.querySelector('input[name="id"]')?.value;
-      const quantity = parseInt(document.querySelector('[name="quantity"]')?.value) || 1;
+      const variantId = document.querySelector('input[name="id"].product-variant-id')?.value
+                     || document.querySelector('input[name="id"]')?.value;
+      const quantity = getQuantity();
       const variants = JSON.parse(honeypopEl.getAttribute('data-variants') || '{}');
       let price = variantId && variants[variantId]
         ? variants[variantId]
@@ -419,8 +430,22 @@
       updateDisplay(calculatePoints(price, quantity));
     }
 
-    // Method 1: Override value setter on variant input (catches programmatic changes)
-    const variantInput = document.querySelector('input[name="id"]');
+    // Scope all listeners to the product form only
+    const productForm = honeypopEl.closest('form');
+
+    // Any click inside the product form (covers variant labels + quantity buttons)
+    if (productForm) {
+      productForm.addEventListener('click', function () {
+        setTimeout(refresh, 100);
+      });
+      productForm.addEventListener('change', function () {
+        setTimeout(refresh, 50);
+      });
+    }
+
+    // Override variant input setter (catches programmatic updates)
+    const variantInput = document.querySelector('input[name="id"].product-variant-id')
+                      || document.querySelector('input[name="id"]');
     if (variantInput) {
       const proto = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
       Object.defineProperty(variantInput, 'value', {
@@ -430,8 +455,9 @@
       });
     }
 
-    // Method 2: Override value setter on quantity input
-    const quantityInput = document.querySelector('[name="quantity"]');
+    // Override quantity input setter
+    const quantityInput = productForm?.querySelector('.quantity__input[type="number"]')
+                       || productForm?.querySelector('quantity-input input');
     if (quantityInput) {
       const proto = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
       Object.defineProperty(quantityInput, 'value', {
@@ -441,34 +467,9 @@
       });
     }
 
-    // Method 3: Click/change delegation (covers buttons and selects)
-    document.addEventListener('click', function (e) {
-      if (e.target.closest('variant-selects, variant-radios, quantity-input, .quantity, .product__form')) {
-        setTimeout(refresh, 100);
-      }
-    });
-
-    document.addEventListener('change', function (e) {
-      if (e.target.name === 'id' || e.target.name === 'quantity' ||
-        e.target.closest('variant-selects, variant-radios, quantity-input')) {
-        setTimeout(refresh, 50);
-      }
-    });
-
-    // Method 4: Shopify PubSub (if available)
-    if (typeof subscribe === 'function' && typeof PUB_SUB_EVENTS !== 'undefined') {
-      Object.values(PUB_SUB_EVENTS).forEach(function (eventName) {
-        if (eventName && (String(eventName).toLowerCase().includes('variant') ||
-          String(eventName).toLowerCase().includes('option'))) {
-          subscribe(eventName, function () { setTimeout(refresh, 50); });
-        }
-      });
-    }
-
     return true;
   }
 
-  // Honeypop injects asynchronously — wait for it if not ready yet
   if (!init()) {
     const observer = new MutationObserver(function () {
       if (document.querySelector('.honeypop-pp')) {
