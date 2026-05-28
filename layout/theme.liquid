@@ -374,5 +374,78 @@
     {%- endif -%}
     {% render 'whatsapp-button' %}
 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const honeypopEl = document.querySelector('.honeypop-pp');
+  if (!honeypopEl) return;
+
+  function calculatePoints(priceCents, quantity) {
+    const ppc = parseFloat(honeypopEl.getAttribute('data-ppc')) || 0;
+    const ppo = parseFloat(honeypopEl.getAttribute('data-ppo')) || 0;
+    const multiplier = parseFloat(honeypopEl.getAttribute('data-tier-multiplier')) || 1;
+    const qty = Math.max(1, parseInt(quantity) || 1);
+    return Math.floor((priceCents / 100) * qty * ppc * multiplier) + ppo;
+  }
+
+  function updateDisplay(pointsEarned) {
+    const textEl = honeypopEl.querySelector('.honeypop-pp-text');
+    if (!textEl) return;
+    const paragraphs = textEl.querySelectorAll('p');
+    if (paragraphs[0]) {
+      paragraphs[0].textContent = paragraphs[0].textContent.replace(
+        /(\bEarn )\d+( points)/,
+        '$1' + pointsEarned + '$2'
+      );
+    }
+    if (paragraphs[1]) {
+      paragraphs[1].textContent = paragraphs[1].textContent.replace(
+        /(Earn )\d+( more)/,
+        '$1' + pointsEarned + '$2'
+      );
+    }
+  }
+
+  function refresh() {
+    const variantId = document.querySelector('input[name="id"]')?.value;
+    const quantity = parseInt(document.querySelector('[name="quantity"]')?.value) || 1;
+    const variants = JSON.parse(honeypopEl.getAttribute('data-variants') || '{}');
+
+    let price;
+    if (variantId && variants[variantId]) {
+      price = variants[variantId];
+      honeypopEl.setAttribute('data-price', price);
+    } else {
+      price = parseInt(honeypopEl.getAttribute('data-price')) || 0;
+    }
+
+    updateDisplay(calculatePoints(price, quantity));
+  }
+
+  // Listen for Shopify variant changes via PubSub
+  if (typeof subscribe === 'function' && typeof PUB_SUB_EVENTS !== 'undefined') {
+    if (PUB_SUB_EVENTS.optionValueSelectionChange) {
+      subscribe(PUB_SUB_EVENTS.optionValueSelectionChange, refresh);
+    }
+  }
+
+  // Fallback: watch the hidden variant ID input for changes
+  const variantInput = document.querySelector('input[name="id"]');
+  if (variantInput) {
+    variantInput.addEventListener('change', refresh);
+    new MutationObserver(refresh).observe(variantInput, {
+      attributes: true,
+      attributeFilter: ['value']
+    });
+  }
+
+  // Listen for quantity changes
+  document.addEventListener('change', function (e) {
+    if (e.target.matches('[name="quantity"]') || e.target.closest('quantity-input')) {
+      refresh();
+    }
+  });
+});
+</script>
+
   </body>
 </html>
