@@ -279,9 +279,9 @@
 
       {%- if shop.customer_accounts_enabled -%}
         <a
-          href="{%- if customer -%}{{ routes.account_url }}{%- else -%}{{ routes.account_login_url }}&return_to=/{%- endif -%}"
-          class="header__icon header__icon--account link focus-inset{% if section.settings.menu != blank %} small-hide{% endif %}"
-          rel="nofollow"
+          href="{%- if customer -%}{{ routes.account_url }}{%- else -%}/customer_authentication/login?return_to=/{%- endif -%}" 
+          class="headericon headericon--account link focus-inset{% if section.settings.menu != blank %} small-hide{% endif %}" 
+          rel="nofollow" >
         >
           {%- if section.settings.enable_customer_avatar -%}
             <account-icon>
