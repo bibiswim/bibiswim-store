@@ -373,5 +373,19 @@
       <script src="{{ 'cart-drawer-modern.js' | asset_url }}" defer="defer"></script>
     {%- endif -%}
     {% render 'whatsapp-button' %}
+
+<script>
+  (function() {
+    var loginForm = document.querySelector('form[action="/account/login"]');
+    if (loginForm) {
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'return_to';
+      input.value = '/';
+      loginForm.appendChild(input);
+    }
+  })();
+</script>
+
   </body>
 </html>
