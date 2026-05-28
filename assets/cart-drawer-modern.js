@@ -739,9 +739,8 @@ class CartDrawerModern extends HTMLElement {
     return formatted;
   }
 
-  async refreshDrawer() {
+async refreshDrawer() {
   try {
-    // Save Honeypop widget before wiping
     const honeypopEl = this.querySelector('.honeypop-cp');
     const honeypopHTML = honeypopEl ? honeypopEl.outerHTML : null;
 
@@ -756,11 +755,30 @@ class CartDrawerModern extends HTMLElement {
       this.innerHTML = newDrawer.innerHTML;
       this.bindEvents();
 
-      // Restore Honeypop widget immediately after refresh
       if (honeypopHTML) {
         const shippingProgress = this.querySelector('[data-shipping-progress]');
         if (shippingProgress) {
           shippingProgress.insertAdjacentHTML('beforebegin', honeypopHTML);
+
+          // Update Honeypop with the refreshed cart total
+          const newCartTotal = parseInt(newDrawer.getAttribute('data-cart-total')) || 0;
+          const honeypopRestored = this.querySelector('.honeypop-cp');
+          if (honeypopRestored && newCartTotal > 0) {
+            honeypopRestored.setAttribute('data-cart-price', newCartTotal);
+
+            // Recalculate points earned for this order
+            const ppc = parseFloat(honeypopRestored.getAttribute('data-ppc')) || 0;
+            const ppo = parseFloat(honeypopRestored.getAttribute('data-ppo')) || 0;
+            const multiplier = parseFloat(honeypopRestored.getAttribute('data-tier-multiplier')) || 1;
+            const pointsEarned = Math.floor((newCartTotal / 100) * ppc * multiplier) + ppo;
+
+            // Update the subheading text
+            const subheading = honeypopRestored.querySelector('.honeypop-cp-subheading');
+            if (subheading) {
+              const template = honeypopRestored.getAttribute('data-logged-in-text') || '+{points} for this order';
+              subheading.textContent = template.replace('{points}', pointsEarned);
+            }
+          }
         }
       }
 
