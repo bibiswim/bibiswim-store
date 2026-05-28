@@ -374,7 +374,8 @@
     {%- endif -%}
     {% render 'whatsapp-button' %}
 
-<script>
+
+    <script>
 (function () {
   function init() {
     const honeypopEl = document.querySelector('.honeypop-pp');
@@ -407,11 +408,10 @@
     }
 
     function getQuantity() {
-      // Use the product form's quantity input specifically, not the cart drawer's
-      const productForm = honeypopEl.closest('form');
+      // Search the whole document for the visible quantity input
       return parseInt(
-        productForm?.querySelector('.quantity__input[type="number"]')?.value ||
-        productForm?.querySelector('quantity-input input')?.value ||
+        document.querySelector('quantity-input .quantity__input')?.value ||
+        document.querySelector('.quantity__input[type="number"]')?.value ||
         1
       );
     }
@@ -430,34 +430,25 @@
       updateDisplay(calculatePoints(price, quantity));
     }
 
-    // Scope all listeners to the product form only
-    const productForm = honeypopEl.closest('form');
-
-    // Any click inside the product form (covers variant labels + quantity buttons)
-    if (productForm) {
-      productForm.addEventListener('click', function () {
-        setTimeout(refresh, 100);
-      });
-      productForm.addEventListener('change', function () {
-        setTimeout(refresh, 50);
-      });
-    }
-
-    // Override variant input setter (catches programmatic updates)
+    // Override variant input setter
     const variantInput = document.querySelector('input[name="id"].product-variant-id')
                       || document.querySelector('input[name="id"]');
     if (variantInput) {
       const proto = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
       Object.defineProperty(variantInput, 'value', {
         get: proto.get,
-        set: function (v) { proto.set.call(this, v); setTimeout(refresh, 50); },
+        set: function (v) {
+          proto.set.call(this, v);
+          // Longer delay — waits for theme to finish resetting quantity after variant change
+          setTimeout(refresh, 300);
+        },
         configurable: true
       });
     }
 
     // Override quantity input setter
-    const quantityInput = productForm?.querySelector('.quantity__input[type="number"]')
-                       || productForm?.querySelector('quantity-input input');
+    const quantityInput = document.querySelector('quantity-input .quantity__input')
+                       || document.querySelector('.quantity__input[type="number"]');
     if (quantityInput) {
       const proto = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
       Object.defineProperty(quantityInput, 'value', {
@@ -466,6 +457,21 @@
         configurable: true
       });
     }
+
+    // Broad document-level click listener — catches quantity +/- even if outside form
+    document.addEventListener('click', function (e) {
+      const isQuantityBtn = e.target.closest('quantity-input');
+      const isVariantBtn = e.target.closest('variant-selects, variant-radios, fieldset');
+      if (isQuantityBtn) setTimeout(refresh, 150);
+      if (isVariantBtn) setTimeout(refresh, 300); // longer for quantity reset
+    });
+
+    // Change events (covers select dropdowns for variants)
+    document.addEventListener('change', function (e) {
+      if (e.target.name === 'id' || e.target.closest('variant-selects, variant-radios')) {
+        setTimeout(refresh, 300);
+      }
+    });
 
     return true;
   }
