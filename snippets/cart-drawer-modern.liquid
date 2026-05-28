@@ -33,7 +33,7 @@
   assign currency_code = cart.currency.iso_code
 -%}
 
-<cart-drawer-modern class="cart-drawer-modern{% if cart == empty %} is-empty{% endif %}" id="CartDrawerModern" data-money-format="{{ shop.money_format }}" data-currency-code="{{ currency_code }}">
+<cart-drawer-modern class="cart-drawer-modern{% if cart == empty %} is-empty{% endif %}" id="CartDrawerModern" data-money-format="{{ shop.money_format }}" data-currency-code="{{ currency_code }}" data-cart-total="{{ cart.total_price }}">
   <!-- Overlay -->
   <div class="cart-drawer-modern__overlay" data-cart-drawer-overlay></div>
 
