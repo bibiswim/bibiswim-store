@@ -740,56 +740,32 @@ class CartDrawerModern extends HTMLElement {
   }
 
   async refreshDrawer() {
-  try {
-    const response = await fetch('/?section_id=cart-drawer');
-    const html = await response.text();
+    try {
+      const response = await fetch('/?section_id=cart-drawer');
+      const html = await response.text();
 
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    const newDrawer = doc.querySelector('cart-drawer-modern');
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const newDrawer = doc.querySelector('cart-drawer-modern');
 
-    if (newDrawer) {
-      // If cart is now empty, do a full replace (different HTML structure needed)
-      const isEmpty = newDrawer.classList.contains('is-empty') ||
-                      !newDrawer.querySelector('[data-cart-items]');
-
-      if (isEmpty) {
+      if (newDrawer) {
         this.innerHTML = newDrawer.innerHTML;
-        this.classList.add('is-empty');
-      } else {
-        this.classList.remove('is-empty');
+        this.bindEvents();
 
-        // Targeted updates only — preserves Honeypop widget in between
-        const targets = [
-          '[data-cart-items]',
-          '[data-shipping-progress]',
-          '[data-cart-count]',
-          '[data-cart-subtotal]',
-        ];
-
-        targets.forEach(selector => {
-          const newEl = newDrawer.querySelector(selector);
-          const currentEl = this.querySelector(selector);
-          if (newEl && currentEl) {
-            currentEl.innerHTML = newEl.innerHTML;
-            // Copy data attributes (e.g. threshold on shipping progress)
-            Array.from(newEl.attributes).forEach(attr => {
-              if (attr.name.startsWith('data-')) {
-                currentEl.setAttribute(attr.name, attr.value);
-              }
-            });
-          }
-        });
+        // Reload recommendations after drawer refresh (especially for empty state)
+        if (typeof loadRecentlyViewedProducts === 'function') {
+          loadRecentlyViewedProducts();
+        }
       }
-
-      this.bindEvents();
-
-      if (typeof loadRecentlyViewedProducts === 'function') {
-        loadRecentlyViewedProducts();
-      }
+    } catch (error) {
+      console.error('Error refreshing drawer:', error);
     }
-  } catch (error) {
-    console.error('Error refreshing drawer:', error);
+  }
+
+  // Method to be called when items are added to cart
+  async onCartUpdated() {
+    await this.refreshDrawer();
+    this.open();
   }
 }
 
