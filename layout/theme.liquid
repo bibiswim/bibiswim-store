@@ -460,7 +460,7 @@ if (variantInput) {
     // Override quantity input setter
     const quantityInput = document.querySelector('quantity-input .quantity__input')
                        || document.querySelector('.quantity__input[type="number"]');
-                       
+
 if (quantityInput) {
   const proto = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
   Object.defineProperty(quantityInput, 'value', {
@@ -503,6 +503,23 @@ if (quantityInput) {
   }
 })();
 </script>
+
+<style>
+  /* Fix Honeypop loyalty widget layout on cart page */
+  .cart__ctas {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cart__ctas .honeypop-cp {
+    width: 100%;
+    margin-top: 0;
+  }
+
+  .cart__ctas .cart__checkout-button {
+    width: 100%;
+  }
+</style>
 
   </body>
 </html>
