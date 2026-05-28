@@ -30,19 +30,18 @@ class CartDrawerModern extends HTMLElement {
 
   // Subscribe to PubSub cart updates for sync with cart page
   setupPubSubSubscription() {
-  if (typeof subscribe === 'function' && typeof PUB_SUB_EVENTS !== 'undefined') {
-    this.cartUpdateUnsubscriber = subscribe(PUB_SUB_EVENTS.cartUpdate, (event) => {
-      if (event.source === 'cart-drawer-modern') {
-        return;
-      }
-      // Skip refresh if drawer is open but no cart operation is in progress
-      // Prevents Honeypop's init event from triggering an unnecessary refresh
-      if (this.isOpen && !this.isUpdating) return;
-      this.refreshDrawer();
-    });
+    // Only subscribe if PubSub is available (Shopify's pubsub.js)
+    if (typeof subscribe === 'function' && typeof PUB_SUB_EVENTS !== 'undefined') {
+      this.cartUpdateUnsubscriber = subscribe(PUB_SUB_EVENTS.cartUpdate, (event) => {
+        // Don't respond to our own updates to prevent loops
+        if (event.source === 'cart-drawer-modern') {
+          return;
+        }
+        // Refresh drawer to sync with cart page changes
+        this.refreshDrawer();
+      });
+    }
   }
-}
-
 
   disconnectedCallback() {
     // Clean up subscription when element is removed
@@ -782,12 +781,9 @@ window.openCartDrawer = function () {
 };
 
 // Listen for cart updates from other parts of the site
-document.addEventListener('cart:updated', (event) => {
+document.addEventListener('cart:updated', () => {
   const drawer = document.querySelector('cart-drawer-modern');
   if (drawer) {
-    // Skip refresh if drawer is open but no cart operation is in progress
-    // Prevents Honeypop's init event from triggering an unnecessary refresh
-    if (drawer.isOpen && !drawer.isUpdating) return;
     drawer.onCartUpdated();
   }
 });
