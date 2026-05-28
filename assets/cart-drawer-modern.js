@@ -740,27 +740,38 @@ class CartDrawerModern extends HTMLElement {
   }
 
   async refreshDrawer() {
-    try {
-      const response = await fetch('/?section_id=cart-drawer');
-      const html = await response.text();
+  try {
+    // Save Honeypop widget before wiping
+    const honeypopEl = this.querySelector('.honeypop-cp');
+    const honeypopHTML = honeypopEl ? honeypopEl.outerHTML : null;
 
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, 'text/html');
-      const newDrawer = doc.querySelector('cart-drawer-modern');
+    const response = await fetch('/?section_id=cart-drawer');
+    const html = await response.text();
 
-      if (newDrawer) {
-        this.innerHTML = newDrawer.innerHTML;
-        this.bindEvents();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const newDrawer = doc.querySelector('cart-drawer-modern');
 
-        // Reload recommendations after drawer refresh (especially for empty state)
-        if (typeof loadRecentlyViewedProducts === 'function') {
-          loadRecentlyViewedProducts();
+    if (newDrawer) {
+      this.innerHTML = newDrawer.innerHTML;
+      this.bindEvents();
+
+      // Restore Honeypop widget immediately after refresh
+      if (honeypopHTML) {
+        const shippingProgress = this.querySelector('[data-shipping-progress]');
+        if (shippingProgress) {
+          shippingProgress.insertAdjacentHTML('beforebegin', honeypopHTML);
         }
       }
-    } catch (error) {
-      console.error('Error refreshing drawer:', error);
+
+      if (typeof loadRecentlyViewedProducts === 'function') {
+        loadRecentlyViewedProducts();
+      }
     }
+  } catch (error) {
+    console.error('Error refreshing drawer:', error);
   }
+}
 
   // Method to be called when items are added to cart
   async onCartUpdated() {
