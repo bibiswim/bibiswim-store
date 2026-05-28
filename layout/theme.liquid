@@ -433,18 +433,36 @@
     // Override variant input setter
     const variantInput = document.querySelector('input[name="id"].product-variant-id')
                       || document.querySelector('input[name="id"]');
-    if (variantInput) {
-      const proto = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
-      Object.defineProperty(variantInput, 'value', {
-        get: proto.get,
-        set: function (v) {
-          proto.set.call(this, v);
-          // Longer delay — waits for theme to finish resetting quantity after variant change
-          setTimeout(refresh, 300);
-        },
-        configurable: true
-      });
-    }
+if (variantInput) {
+  const proto = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  Object.defineProperty(variantInput, 'value', {
+    get: proto.get,
+    set: function (v) {
+      proto.set.call(this, v);
+      // Save quantity NOW before the theme resets it
+      const savedQty = getQuantity();
+      setTimeout(function () {
+        // Restore quantity after theme has finished resetting
+        if (savedQty > 1) {
+          const qtyEl = document.querySelector('quantity-input .quantity__input')
+                     || document.querySelector('.quantity__input[type="number"]');
+          if (qtyEl) {
+            // Use original prototype setter to avoid triggering our custom setter
+            const qtyProto = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+            qtyProto.set.call(qtyEl, savedQty);
+            // Re-enable the minus button (theme disables it when qty=1)
+            const minusBtn = qtyEl.closest('quantity-input')?.querySelector('[name="minus"]');
+            if (minusBtn) minusBtn.disabled = false;
+            // Notify any other listeners
+            qtyEl.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        }
+        refresh();
+      }, 300);
+    },
+    configurable: true
+  });
+}
 
     // Override quantity input setter
     const quantityInput = document.querySelector('quantity-input .quantity__input')
