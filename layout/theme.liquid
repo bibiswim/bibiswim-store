@@ -375,76 +375,110 @@
     {% render 'whatsapp-button' %}
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  const honeypopEl = document.querySelector('.honeypop-pp');
-  if (!honeypopEl) return;
+(function () {
+  function init() {
+    const honeypopEl = document.querySelector('.honeypop-pp');
+    if (!honeypopEl) return false;
 
-  function calculatePoints(priceCents, quantity) {
-    const ppc = parseFloat(honeypopEl.getAttribute('data-ppc')) || 0;
-    const ppo = parseFloat(honeypopEl.getAttribute('data-ppo')) || 0;
-    const multiplier = parseFloat(honeypopEl.getAttribute('data-tier-multiplier')) || 1;
-    const qty = Math.max(1, parseInt(quantity) || 1);
-    return Math.floor((priceCents / 100) * qty * ppc * multiplier) + ppo;
-  }
-
-  function updateDisplay(pointsEarned) {
-    const textEl = honeypopEl.querySelector('.honeypop-pp-text');
-    if (!textEl) return;
-    const paragraphs = textEl.querySelectorAll('p');
-    if (paragraphs[0]) {
-      paragraphs[0].textContent = paragraphs[0].textContent.replace(
-        /(\bEarn )\d+( points)/,
-        '$1' + pointsEarned + '$2'
-      );
-    }
-    if (paragraphs[1]) {
-      paragraphs[1].textContent = paragraphs[1].textContent.replace(
-        /(Earn )\d+( more)/,
-        '$1' + pointsEarned + '$2'
-      );
-    }
-  }
-
-  function refresh() {
-    const variantId = document.querySelector('input[name="id"]')?.value;
-    const quantity = parseInt(document.querySelector('[name="quantity"]')?.value) || 1;
-    const variants = JSON.parse(honeypopEl.getAttribute('data-variants') || '{}');
-
-    let price;
-    if (variantId && variants[variantId]) {
-      price = variants[variantId];
-      honeypopEl.setAttribute('data-price', price);
-    } else {
-      price = parseInt(honeypopEl.getAttribute('data-price')) || 0;
+    function calculatePoints(priceCents, quantity) {
+      const ppc = parseFloat(honeypopEl.getAttribute('data-ppc')) || 0;
+      const ppo = parseFloat(honeypopEl.getAttribute('data-ppo')) || 0;
+      const multiplier = parseFloat(honeypopEl.getAttribute('data-tier-multiplier')) || 1;
+      const qty = Math.max(1, parseInt(quantity) || 1);
+      return Math.floor((priceCents / 100) * qty * ppc * multiplier) + ppo;
     }
 
-    updateDisplay(calculatePoints(price, quantity));
-  }
-
-  // Listen for Shopify variant changes via PubSub
-  if (typeof subscribe === 'function' && typeof PUB_SUB_EVENTS !== 'undefined') {
-    if (PUB_SUB_EVENTS.optionValueSelectionChange) {
-      subscribe(PUB_SUB_EVENTS.optionValueSelectionChange, refresh);
+    function updateDisplay(pointsEarned) {
+      const textEl = honeypopEl.querySelector('.honeypop-pp-text');
+      if (!textEl) return;
+      const paragraphs = textEl.querySelectorAll('p');
+      if (paragraphs[0]) {
+        paragraphs[0].textContent = paragraphs[0].textContent.replace(
+          /(\bEarn )\d+( points)/,
+          '$1' + pointsEarned + '$2'
+        );
+      }
+      if (paragraphs[1]) {
+        paragraphs[1].textContent = paragraphs[1].textContent.replace(
+          /(Earn )\d+( more)/,
+          '$1' + pointsEarned + '$2'
+        );
+      }
     }
-  }
 
-  // Fallback: watch the hidden variant ID input for changes
-  const variantInput = document.querySelector('input[name="id"]');
-  if (variantInput) {
-    variantInput.addEventListener('change', refresh);
-    new MutationObserver(refresh).observe(variantInput, {
-      attributes: true,
-      attributeFilter: ['value']
+    function refresh() {
+      const variantId = document.querySelector('input[name="id"]')?.value;
+      const quantity = parseInt(document.querySelector('[name="quantity"]')?.value) || 1;
+      const variants = JSON.parse(honeypopEl.getAttribute('data-variants') || '{}');
+      let price = variantId && variants[variantId]
+        ? variants[variantId]
+        : parseInt(honeypopEl.getAttribute('data-price')) || 0;
+      if (variantId && variants[variantId]) {
+        honeypopEl.setAttribute('data-price', price);
+      }
+      updateDisplay(calculatePoints(price, quantity));
+    }
+
+    // Method 1: Override value setter on variant input (catches programmatic changes)
+    const variantInput = document.querySelector('input[name="id"]');
+    if (variantInput) {
+      const proto = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+      Object.defineProperty(variantInput, 'value', {
+        get: proto.get,
+        set: function (v) { proto.set.call(this, v); setTimeout(refresh, 50); },
+        configurable: true
+      });
+    }
+
+    // Method 2: Override value setter on quantity input
+    const quantityInput = document.querySelector('[name="quantity"]');
+    if (quantityInput) {
+      const proto = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+      Object.defineProperty(quantityInput, 'value', {
+        get: proto.get,
+        set: function (v) { proto.set.call(this, v); setTimeout(refresh, 50); },
+        configurable: true
+      });
+    }
+
+    // Method 3: Click/change delegation (covers buttons and selects)
+    document.addEventListener('click', function (e) {
+      if (e.target.closest('variant-selects, variant-radios, quantity-input, .quantity, .product__form')) {
+        setTimeout(refresh, 100);
+      }
     });
+
+    document.addEventListener('change', function (e) {
+      if (e.target.name === 'id' || e.target.name === 'quantity' ||
+        e.target.closest('variant-selects, variant-radios, quantity-input')) {
+        setTimeout(refresh, 50);
+      }
+    });
+
+    // Method 4: Shopify PubSub (if available)
+    if (typeof subscribe === 'function' && typeof PUB_SUB_EVENTS !== 'undefined') {
+      Object.values(PUB_SUB_EVENTS).forEach(function (eventName) {
+        if (eventName && (String(eventName).toLowerCase().includes('variant') ||
+          String(eventName).toLowerCase().includes('option'))) {
+          subscribe(eventName, function () { setTimeout(refresh, 50); });
+        }
+      });
+    }
+
+    return true;
   }
 
-  // Listen for quantity changes
-  document.addEventListener('change', function (e) {
-    if (e.target.matches('[name="quantity"]') || e.target.closest('quantity-input')) {
-      refresh();
-    }
-  });
-});
+  // Honeypop injects asynchronously — wait for it if not ready yet
+  if (!init()) {
+    const observer = new MutationObserver(function () {
+      if (document.querySelector('.honeypop-pp')) {
+        observer.disconnect();
+        init();
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+})();
 </script>
 
   </body>
