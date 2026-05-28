@@ -378,6 +378,7 @@
     <script>
 (function () {
   function init() {
+    let blockQtyReset = false;
     const honeypopEl = document.querySelector('.honeypop-pp');
     if (!honeypopEl) return false;
 
@@ -433,32 +434,24 @@
     // Override variant input setter
     const variantInput = document.querySelector('input[name="id"].product-variant-id')
                       || document.querySelector('input[name="id"]');
+
 if (variantInput) {
   const proto = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
   Object.defineProperty(variantInput, 'value', {
     get: proto.get,
     set: function (v) {
       proto.set.call(this, v);
-      // Save quantity NOW before the theme resets it
-      const savedQty = getQuantity();
+      // Block quantity reset for the next tick
+      blockQtyReset = true;
       setTimeout(function () {
-        // Restore quantity after theme has finished resetting
-        if (savedQty > 1) {
-          const qtyEl = document.querySelector('quantity-input .quantity__input')
-                     || document.querySelector('.quantity__input[type="number"]');
-          if (qtyEl) {
-            // Use original prototype setter to avoid triggering our custom setter
-            const qtyProto = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
-            qtyProto.set.call(qtyEl, savedQty);
-            // Re-enable the minus button (theme disables it when qty=1)
-            const minusBtn = qtyEl.closest('quantity-input')?.querySelector('[name="minus"]');
-            if (minusBtn) minusBtn.disabled = false;
-            // Notify any other listeners
-            qtyEl.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-        }
+        blockQtyReset = false;
+        // Re-enable minus button in case theme disabled it
+        const qtyEl = document.querySelector('quantity-input .quantity__input')
+                   || document.querySelector('.quantity__input[type="number"]');
+        const minusBtn = qtyEl?.closest('quantity-input')?.querySelector('[name="minus"]');
+        if (minusBtn && getQuantity() > 1) minusBtn.disabled = false;
         refresh();
-      }, 300);
+      }, 0);
     },
     configurable: true
   });
@@ -467,14 +460,19 @@ if (variantInput) {
     // Override quantity input setter
     const quantityInput = document.querySelector('quantity-input .quantity__input')
                        || document.querySelector('.quantity__input[type="number"]');
-    if (quantityInput) {
-      const proto = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
-      Object.defineProperty(quantityInput, 'value', {
-        get: proto.get,
-        set: function (v) { proto.set.call(this, v); setTimeout(refresh, 50); },
-        configurable: true
-      });
-    }
+                       
+if (quantityInput) {
+  const proto = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  Object.defineProperty(quantityInput, 'value', {
+    get: proto.get,
+    set: function (v) {
+      if (blockQtyReset) return; // Silently block theme's reset during variant change
+      proto.set.call(this, v);
+      setTimeout(refresh, 50);
+    },
+    configurable: true
+  });
+}
 
     // Broad document-level click listener — catches quantity +/- even if outside form
     document.addEventListener('click', function (e) {
