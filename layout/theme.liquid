@@ -441,16 +441,14 @@ if (variantInput) {
     get: proto.get,
     set: function (v) {
       proto.set.call(this, v);
-      // Block quantity reset for the next tick
       blockQtyReset = true;
+      refresh(); // ← run immediately, before Honeypop can show wrong value
       setTimeout(function () {
         blockQtyReset = false;
-        // Re-enable minus button in case theme disabled it
         const qtyEl = document.querySelector('quantity-input .quantity__input')
                    || document.querySelector('.quantity__input[type="number"]');
         const minusBtn = qtyEl?.closest('quantity-input')?.querySelector('[name="minus"]');
         if (minusBtn && getQuantity() > 1) minusBtn.disabled = false;
-        refresh();
       }, 0);
     },
     configurable: true
