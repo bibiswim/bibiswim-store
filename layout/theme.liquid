@@ -401,12 +401,12 @@ if (paragraphs[0]) {
   );
   if (paragraphs[0].textContent !== updated) paragraphs[0].textContent = updated;
 }
-  if (paragraphs[1]) {
-    const updated = paragraphs[1].textContent.replace(
-      /(Earn )\d+( more)/, '$1' + pointsEarned + '$2'
-    );
-    if (paragraphs[1].textContent !== updated) paragraphs[1].textContent = updated;
-  }
+if (paragraphs[1]) {
+  const updated = paragraphs[1].textContent.replace(
+    /(Earn )(\bup to\b\s*)?\d+( more)/,
+    '$1up to ' + pointsEarned + '$3'
+  );
+  if (paragraphs[1].textContent !== updated) paragraphs[1].textContent = updated;
 }
 
     function getQuantity() {
