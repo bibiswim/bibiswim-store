@@ -403,7 +403,8 @@ if (paragraphs[0]) {
 }
   if (paragraphs[1]) {
     const updated = paragraphs[1].textContent.replace(
-      /(Earn )\d+( more)/, '$1' + pointsEarned + '$2'
+      /(Earn )(\bup to\b\s*)?\d+( more)/,
+      '$1up to ' + pointsEarned + '$3'
     );
     if (paragraphs[1].textContent !== updated) paragraphs[1].textContent = updated;
   }
