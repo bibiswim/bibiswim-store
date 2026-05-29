@@ -741,9 +741,11 @@ class CartDrawerModern extends HTMLElement {
 
 async refreshDrawer() {
   try {
+    const honeypopEl = this.querySelector('.honeypop-cp');
+    const honeypopHTML = honeypopEl ? honeypopEl.outerHTML : null;
+
     const response = await fetch('/?section_id=cart-drawer');
     const html = await response.text();
-
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     const newDrawer = doc.querySelector('cart-drawer-modern');
@@ -754,39 +756,61 @@ async refreshDrawer() {
       this.innerHTML = newDrawer.innerHTML;
       this.bindEvents();
 
-      // Let Honeypop re-inject naturally — watch for it, then fix position + update points
-      const self = this;
-      const positionObserver = new MutationObserver(function () {
-        const honeypop = self.querySelector('.honeypop-cp');
-        const shippingProgress = self.querySelector('[data-shipping-progress]');
-        if (!honeypop || !shippingProgress) return;
+      if (honeypopHTML) {
+        const shippingProgress = this.querySelector('[data-shipping-progress]');
+        if (shippingProgress) {
+          shippingProgress.insertAdjacentHTML('beforebegin', honeypopHTML);
 
-        // Move honeypop above the shipping bar if not already there
-        if (honeypop.nextElementSibling !== shippingProgress) {
-          shippingProgress.insertAdjacentElement('beforebegin', honeypop);
-        }
+          const hp = this.querySelector('.honeypop-cp');
+          if (hp) {
+            // Update points
+            if (newCartTotal > 0) {
+              hp.setAttribute('data-cart-price', newCartTotal);
+              const ppc = parseFloat(hp.getAttribute('data-ppc')) || 0;
+              const ppo = parseFloat(hp.getAttribute('data-ppo')) || 0;
+              const multiplier = parseFloat(hp.getAttribute('data-tier-multiplier')) || 1;
+              const pointsEarned = Math.floor((newCartTotal / 100) * ppc * multiplier) + ppo;
+              const subheading = hp.querySelector('.honeypop-cp-subheading');
+              if (subheading) {
+                const template = hp.getAttribute('data-logged-in-text') || '+{points} for this order';
+                subheading.textContent = template.replace('{points}', pointsEarned);
+              }
+            }
 
-        // Update points with fresh cart total
-        if (newCartTotal > 0) {
-          honeypop.setAttribute('data-cart-price', newCartTotal);
-          const ppc = parseFloat(honeypop.getAttribute('data-ppc')) || 0;
-          const ppo = parseFloat(honeypop.getAttribute('data-ppo')) || 0;
-          const multiplier = parseFloat(honeypop.getAttribute('data-tier-multiplier')) || 1;
-          const pointsEarned = Math.floor((newCartTotal / 100) * ppc * multiplier) + ppo;
-          const subheading = honeypop.querySelector('.honeypop-cp-subheading');
-          if (subheading) {
-            const template = honeypop.getAttribute('data-logged-in-text') || '+{points} for this order';
-            subheading.textContent = template.replace('{points}', pointsEarned);
+            // Re-attach main header toggle (expand/collapse panel)
+            const header = hp.querySelector('.honeypop-cp-header');
+            const panel = hp.querySelector('.honeypop-cp-panel');
+            const openBtn = hp.querySelector('.honeypop-cp-open');
+            if (header && panel && openBtn) {
+              header.addEventListener('click', function (e) {
+                if (e.target.closest('.honeypop-cp-panel')) return;
+                const willOpen = openBtn.getAttribute('aria-expanded') !== 'true';
+                openBtn.setAttribute('aria-expanded', willOpen);
+                panel.style.gridTemplateRows = willOpen ? '1fr' : '0fr';
+                const svg = openBtn.querySelector('svg');
+                if (svg) svg.style.transform = willOpen ? 'rotate(-180deg)' : 'rotate(0deg)';
+              });
+            }
+
+            // Re-attach reward item expand/collapse
+            hp.querySelectorAll('.cp-reward-wrapper').forEach(function (wrapper) {
+              const clickRow = wrapper.querySelector('[style*="cursor: pointer"]');
+              const rewardPanel = wrapper.querySelector('[style*="grid-template-rows"]');
+              if (clickRow && rewardPanel) {
+                clickRow.addEventListener('click', function () {
+                  // Close all other reward panels
+                  hp.querySelectorAll('.cp-reward-wrapper [style*="grid-template-rows"]').forEach(function (p) {
+                    if (p !== rewardPanel) p.style.gridTemplateRows = '0fr';
+                  });
+                  // Toggle this one
+                  const isOpen = rewardPanel.style.gridTemplateRows === '1fr';
+                  rewardPanel.style.gridTemplateRows = isOpen ? '0fr' : '1fr';
+                });
+              }
+            });
           }
         }
-
-        positionObserver.disconnect();
-      });
-
-      positionObserver.observe(this, { childList: true, subtree: true });
-
-      // Safety disconnect after 5 seconds in case Honeypop doesn't re-inject
-      setTimeout(() => positionObserver.disconnect(), 5000);
+      }
 
       if (typeof loadRecentlyViewedProducts === 'function') {
         loadRecentlyViewedProducts();
