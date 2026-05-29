@@ -390,23 +390,23 @@
       return Math.floor((priceCents / 100) * qty * ppc * multiplier) + ppo;
     }
 
-    function updateDisplay(pointsEarned) {
-      const textEl = honeypopEl.querySelector('.honeypop-pp-text');
-      if (!textEl) return;
-      const paragraphs = textEl.querySelectorAll('p');
-      if (paragraphs[0]) {
-        paragraphs[0].textContent = paragraphs[0].textContent.replace(
-          /(\bEarn )\d+( points)/,
-          '$1' + pointsEarned + '$2'
-        );
-      }
-      if (paragraphs[1]) {
-        paragraphs[1].textContent = paragraphs[1].textContent.replace(
-          /(Earn )\d+( more)/,
-          '$1' + pointsEarned + '$2'
-        );
-      }
-    }
+function updateDisplay(pointsEarned) {
+  const textEl = honeypopEl.querySelector('.honeypop-pp-text');
+  if (!textEl) return;
+  const paragraphs = textEl.querySelectorAll('p');
+  if (paragraphs[0]) {
+    const updated = paragraphs[0].textContent.replace(
+      /(\bEarn )\d+( points)/, '$1' + pointsEarned + '$2'
+    );
+    if (paragraphs[0].textContent !== updated) paragraphs[0].textContent = updated;
+  }
+  if (paragraphs[1]) {
+    const updated = paragraphs[1].textContent.replace(
+      /(Earn )\d+( more)/, '$1' + pointsEarned + '$2'
+    );
+    if (paragraphs[1].textContent !== updated) paragraphs[1].textContent = updated;
+  }
+}
 
     function getQuantity() {
       // Search the whole document for the visible quantity input
@@ -486,6 +486,14 @@ if (quantityInput) {
         setTimeout(refresh, 300);
       }
     });
+
+    // Watch for Honeypop's own display updates and immediately correct them
+const honeypopTextEl = honeypopEl.querySelector('.honeypop-pp-text');
+if (honeypopTextEl) {
+  new MutationObserver(function () {
+    refresh();
+  }).observe(honeypopTextEl, { childList: true, subtree: true, characterData: true });
+}
 
     return true;
   }
