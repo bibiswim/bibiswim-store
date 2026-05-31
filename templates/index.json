@@ -134,7 +134,7 @@
             "link": "",
             "button_style_secondary": false,
             "show_text_box": false,
-            "box_align": "middle-center",
+            "box_align": "top-center",
             "text_alignment": "center",
             "text_alignment_mobile": "center",
             "color_scheme": "scheme-1"
@@ -204,7 +204,7 @@
       ],
       "name": "t:sections.slideshow.presets.name",
       "settings": {
-        "layout": "full_bleed",
+        "layout": "grid",
         "slide_height": "small",
         "slider_visual": "dots",
         "auto_rotate": true,
