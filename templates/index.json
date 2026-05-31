@@ -101,66 +101,43 @@
         "show_text_below": true
       }
     },
-    "slideshow_qKqtq6": {
-      "type": "slideshow",
-      "blocks": {
-        "slide_nYLeWF": {
-          "type": "slide",
-          "settings": {
-            "image": "shopify://shop_images/ChatGPT_Image_2026_5_31_21_34_21.png",
-            "image_overlay_opacity": 0,
-            "heading": "",
-            "heading_size": "h1",
-            "subheading": "",
-            "button_label": "",
-            "link": "",
-            "button_style_secondary": false,
-            "show_text_box": false,
-            "box_align": "middle-center",
-            "text_alignment": "center",
-            "text_alignment_mobile": "center",
-            "color_scheme": ""
-          }
-        },
-        "slide_GAmXJe": {
-          "type": "slide",
-          "settings": {
-            "image": "shopify://shop_images/ChatGPT_Image_2026_5_31_21_25_10.png",
-            "image_overlay_opacity": 0,
-            "heading": "",
-            "heading_size": "h1",
-            "subheading": "",
-            "button_label": "",
-            "link": "shopify://products/mermaid-swimming-suit-kids-girl-2-piece-swimsuit-muslimah-swimwear-baju-renang-budak-perempuan",
-            "button_style_secondary": false,
-            "show_text_box": false,
-            "box_align": "middle-center",
-            "text_alignment": "center",
-            "text_alignment_mobile": "center",
-            "color_scheme": "ocean-breeze"
-          }
-        }
-      },
-      "block_order": [
-        "slide_nYLeWF",
-        "slide_GAmXJe"
-      ],
-      "disabled": true,
-      "name": "t:sections.slideshow.presets.name",
+    "image_banner": {
+      "type": "image-banner",
+      "name": "Pack Your Next Water Adventure",
       "settings": {
-        "layout": "full_bleed",
-        "slide_height": "adapt_image",
-        "slider_visual": "dots",
-        "auto_rotate": true,
-        "change_slides_speed": 5,
+        "image": "shopify://shop_images/ChatGPT_Image_2026_5_31_21_25_10.png",
+        "image_overlay_opacity": 0,
+        "image_height": "adapt",
         "image_behavior": "none",
-        "show_text_below": false,
-        "accessibility_info": "Slideshow about our brand"
+        "desktop_content_position": "bottom-center",
+        "desktop_content_alignment": "center",
+        "show_text_box": false,
+        "color_scheme": "scheme-2c010289-6033-4712-a74d-b18cf7dbf7f9",
+        "stack_images_on_mobile": false,
+        "mobile_content_alignment": "center",
+        "show_text_below": false
+      }
+    },
+    "image_banner_bVAktr": {
+      "type": "image-banner",
+      "name": "Ready for Swim Class?",
+      "settings": {
+        "image": "shopify://shop_images/ChatGPT_Image_2026_5_31_21_41_36.png",
+        "image_overlay_opacity": 0,
+        "image_height": "adapt",
+        "image_behavior": "none",
+        "desktop_content_position": "middle-center",
+        "desktop_content_alignment": "center",
+        "show_text_box": false,
+        "color_scheme": "",
+        "stack_images_on_mobile": false,
+        "mobile_content_alignment": "center",
+        "show_text_below": false
       }
     },
     "image_banner_VWBAiQ": {
       "type": "image-banner",
-      "name": "t:sections.image-banner.presets.name",
+      "name": "Bibiswim Introduction",
       "settings": {
         "image": "shopify://shop_images/Mermaid_Fantasy.png",
         "image_overlay_opacity": 0,
@@ -173,24 +150,6 @@
         "stack_images_on_mobile": true,
         "mobile_content_alignment": "center",
         "show_text_below": true
-      }
-    },
-    "image_banner": {
-      "type": "image-banner",
-      "disabled": true,
-      "name": "Main Banner",
-      "settings": {
-        "image": "shopify://shop_images/Website_Main_Banner_2560x1240_325e0971-4609-4333-aede-79e5d87bfac0.webp",
-        "image_overlay_opacity": 0,
-        "image_height": "adapt",
-        "image_behavior": "none",
-        "desktop_content_position": "bottom-center",
-        "desktop_content_alignment": "center",
-        "show_text_box": false,
-        "color_scheme": "scheme-2c010289-6033-4712-a74d-b18cf7dbf7f9",
-        "stack_images_on_mobile": false,
-        "mobile_content_alignment": "center",
-        "show_text_below": false
       }
     },
     "category_navigation_FTCb79": {
@@ -440,7 +399,7 @@
     },
     "image_banner_6FkUX3": {
       "type": "image-banner",
-      "name": "t:sections.image-banner.presets.name",
+      "name": "Not Sure Which Size Fits Best?",
       "settings": {
         "image": "shopify://shop_images/Which_size.webp",
         "image_overlay_opacity": 0,
@@ -466,62 +425,14 @@
       "settings": {
         "include_margins": true
       }
-    },
-    "image_banner_bVAktr": {
-      "type": "image-banner",
-      "blocks": {
-        "heading_dXcw69": {
-          "type": "heading",
-          "settings": {
-            "heading": "Image banner",
-            "heading_size": "h1"
-          }
-        },
-        "text_Vyjxwe": {
-          "type": "text",
-          "settings": {
-            "text": "Give customers details about the banner image(s) or content on the template.",
-            "text_style": "body"
-          }
-        },
-        "buttons_yrC87z": {
-          "type": "buttons",
-          "settings": {
-            "button_label_1": "Button label",
-            "button_link_1": "",
-            "button_style_secondary_1": false,
-            "button_label_2": "Button label",
-            "button_link_2": "",
-            "button_style_secondary_2": false
-          }
-        }
-      },
-      "block_order": [
-        "heading_dXcw69",
-        "text_Vyjxwe",
-        "buttons_yrC87z"
-      ],
-      "name": "t:sections.image-banner.presets.name",
-      "settings": {
-        "image_overlay_opacity": 0,
-        "image_height": "medium",
-        "image_behavior": "none",
-        "desktop_content_position": "middle-center",
-        "desktop_content_alignment": "center",
-        "show_text_box": true,
-        "color_scheme": "",
-        "stack_images_on_mobile": true,
-        "mobile_content_alignment": "center",
-        "show_text_below": true
-      }
     }
   },
   "order": [
     "top_navigation_RKYUxD",
     "image_banner_epD4x9",
-    "slideshow_qKqtq6",
-    "image_banner_VWBAiQ",
     "image_banner",
+    "image_banner_bVAktr",
+    "image_banner_VWBAiQ",
     "category_navigation_FTCb79",
     "featured_collection_Fn6Xj8",
     "featured_collection_7rLAGB",
@@ -531,7 +442,6 @@
     "image_banner_CwjXtz",
     "image_banner_6FkUX3",
     "1763224727e23b1af4",
-    "1777260240f26d0645",
-    "image_banner_bVAktr"
+    "1777260240f26d0645"
   ]
 }
