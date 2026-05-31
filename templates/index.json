@@ -204,8 +204,8 @@
       ],
       "name": "t:sections.slideshow.presets.name",
       "settings": {
-        "layout": "grid",
-        "slide_height": "small",
+        "layout": "full_bleed",
+        "slide_height": "adapt_image",
         "slider_visual": "dots",
         "auto_rotate": true,
         "change_slides_speed": 5,
