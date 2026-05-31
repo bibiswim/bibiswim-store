@@ -202,9 +202,7 @@
         "slide_RWc4Qj",
         "slide_XztmEe"
       ],
-      "custom_css": [
-        "@media screen and (max-width: 749px) {.slideshow, .slideshow__slide, .banner {height: auto !important; min-height: 0 !important; } .slideshow__media, .banner__media {position: relative !important; height: auto !important; min-height: 0 !important; } .slideshow__media img, .banner__media img {position: relative !important; width: 100% !important; height: auto !important; object-fit: contain !important; display: block !important; } .slideshow__controls {position: relative !important; margin-top: 0 !important; }}"
-      ],
+      "custom_css": [],
       "name": "t:sections.slideshow.presets.name",
       "settings": {
         "layout": "full_bleed",
