@@ -107,7 +107,7 @@
       "settings": {
         "image": "shopify://shop_images/New_Arrival_Categories.jpg",
         "image_overlay_opacity": 0,
-        "image_height": "medium",
+        "image_height": "adapt",
         "image_behavior": "none",
         "desktop_content_position": "middle-center",
         "desktop_content_alignment": "center",
