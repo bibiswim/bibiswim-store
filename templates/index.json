@@ -104,6 +104,42 @@
     "slideshow_d7bETQ": {
       "type": "slideshow",
       "blocks": {
+        "slide_bnNFqa": {
+          "type": "slide",
+          "settings": {
+            "image": "shopify://shop_images/ChatGPT_Image_2026_5_31_21_34_21.png",
+            "image_overlay_opacity": 0,
+            "heading": "",
+            "heading_size": "h1",
+            "subheading": "",
+            "button_label": "",
+            "link": "",
+            "button_style_secondary": false,
+            "show_text_box": false,
+            "box_align": "middle-center",
+            "text_alignment": "center",
+            "text_alignment_mobile": "center",
+            "color_scheme": "scheme-1"
+          }
+        },
+        "slide_GwF9WF": {
+          "type": "slide",
+          "settings": {
+            "image": "shopify://shop_images/ChatGPT_Image_2026_5_31_21_32_01.png",
+            "image_overlay_opacity": 0,
+            "heading": "",
+            "heading_size": "h1",
+            "subheading": "",
+            "button_label": "",
+            "link": "",
+            "button_style_secondary": false,
+            "show_text_box": false,
+            "box_align": "middle-center",
+            "text_alignment": "center",
+            "text_alignment_mobile": "center",
+            "color_scheme": "scheme-1"
+          }
+        },
         "slide_xN93wM": {
           "type": "slide",
           "settings": {
@@ -160,6 +196,8 @@
         }
       },
       "block_order": [
+        "slide_bnNFqa",
+        "slide_GwF9WF",
         "slide_xN93wM",
         "slide_RWc4Qj",
         "slide_XztmEe"
@@ -174,23 +212,6 @@
         "image_behavior": "none",
         "show_text_below": false,
         "accessibility_info": "Slideshow about our brand"
-      }
-    },
-    "image_banner_RgFaFW": {
-      "type": "image-banner",
-      "name": "t:sections.image-banner.presets.name",
-      "settings": {
-        "image": "shopify://shop_images/New_Arrival_Categories.jpg",
-        "image_overlay_opacity": 0,
-        "image_height": "adapt",
-        "image_behavior": "none",
-        "desktop_content_position": "middle-center",
-        "desktop_content_alignment": "center",
-        "show_text_box": true,
-        "color_scheme": "",
-        "stack_images_on_mobile": true,
-        "mobile_content_alignment": "center",
-        "show_text_below": true
       }
     },
     "image_banner_VWBAiQ": {
@@ -564,7 +585,6 @@
     "top_navigation_RKYUxD",
     "image_banner_epD4x9",
     "slideshow_d7bETQ",
-    "image_banner_RgFaFW",
     "image_banner_VWBAiQ",
     "slideshow_qKqtq6",
     "image_banner",
