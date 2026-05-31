@@ -145,6 +145,7 @@
         "slide_nYLeWF",
         "slide_GAmXJe"
       ],
+      "disabled": true,
       "name": "t:sections.slideshow.presets.name",
       "settings": {
         "layout": "full_bleed",
