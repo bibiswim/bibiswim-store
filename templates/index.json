@@ -137,6 +137,7 @@
     },
     "image_banner_VWBAiQ": {
       "type": "image-banner",
+      "disabled": true,
       "name": "Bibiswim Introduction",
       "settings": {
         "image": "shopify://shop_images/Mermaid_Fantasy.png",
