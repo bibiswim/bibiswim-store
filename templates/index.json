@@ -100,21 +100,21 @@
         "show_text_below": true
       }
     },
-    "image_banner_Whm4c9": {
+    "image_banner_bVAktr": {
       "type": "image-banner",
-      "name": "FreeGift",
+      "name": "Ready for Swim Class?",
       "settings": {
-        "image": "shopify://shop_images/Freegift_20260601.webp",
+        "image": "shopify://shop_images/ChatGPT_Image_2026_5_31_21_41_36.png",
         "image_overlay_opacity": 0,
         "image_height": "adapt",
         "image_behavior": "none",
         "desktop_content_position": "middle-center",
         "desktop_content_alignment": "center",
-        "show_text_box": true,
+        "show_text_box": false,
         "color_scheme": "",
-        "stack_images_on_mobile": true,
+        "stack_images_on_mobile": false,
         "mobile_content_alignment": "center",
-        "show_text_below": true
+        "show_text_below": false
       }
     },
     "image_banner_epD4x9": {
@@ -133,40 +133,6 @@
         "stack_images_on_mobile": true,
         "mobile_content_alignment": "center",
         "show_text_below": true
-      }
-    },
-    "image_banner": {
-      "type": "image-banner",
-      "name": "Pack Your Next Water Adventure",
-      "settings": {
-        "image": "shopify://shop_images/ChatGPT_Image_2026_5_31_21_25_10.png",
-        "image_overlay_opacity": 0,
-        "image_height": "adapt",
-        "image_behavior": "none",
-        "desktop_content_position": "bottom-center",
-        "desktop_content_alignment": "center",
-        "show_text_box": false,
-        "color_scheme": "scheme-2c010289-6033-4712-a74d-b18cf7dbf7f9",
-        "stack_images_on_mobile": false,
-        "mobile_content_alignment": "center",
-        "show_text_below": false
-      }
-    },
-    "image_banner_bVAktr": {
-      "type": "image-banner",
-      "name": "Ready for Swim Class?",
-      "settings": {
-        "image": "shopify://shop_images/ChatGPT_Image_2026_5_31_21_41_36.png",
-        "image_overlay_opacity": 0,
-        "image_height": "adapt",
-        "image_behavior": "none",
-        "desktop_content_position": "middle-center",
-        "desktop_content_alignment": "center",
-        "show_text_box": false,
-        "color_scheme": "",
-        "stack_images_on_mobile": false,
-        "mobile_content_alignment": "center",
-        "show_text_below": false
       }
     },
     "image_banner_VWBAiQ": {
@@ -339,11 +305,28 @@
         "padding_bottom": 36
       }
     },
-    "image_banner_BCQhzi": {
+    "image_banner": {
       "type": "image-banner",
-      "name": "t:sections.image-banner.presets.name",
+      "name": "Pack Your Next Water Adventure",
       "settings": {
-        "image": "shopify://shop_images/SlideShow1.webp",
+        "image": "shopify://shop_images/ChatGPT_Image_2026_5_31_21_25_10.png",
+        "image_overlay_opacity": 0,
+        "image_height": "adapt",
+        "image_behavior": "none",
+        "desktop_content_position": "bottom-center",
+        "desktop_content_alignment": "center",
+        "show_text_box": false,
+        "color_scheme": "scheme-2c010289-6033-4712-a74d-b18cf7dbf7f9",
+        "stack_images_on_mobile": false,
+        "mobile_content_alignment": "center",
+        "show_text_below": false
+      }
+    },
+    "image_banner_Whm4c9": {
+      "type": "image-banner",
+      "name": "FreeGift",
+      "settings": {
+        "image": "shopify://shop_images/Freegift_20260601.webp",
         "image_overlay_opacity": 0,
         "image_height": "adapt",
         "image_behavior": "none",
@@ -385,9 +368,25 @@
         "padding_bottom": 36
       }
     },
+    "image_banner_BCQhzi": {
+      "type": "image-banner",
+      "name": "Mermaid Banner",
+      "settings": {
+        "image": "shopify://shop_images/SlideShow1.webp",
+        "image_overlay_opacity": 0,
+        "image_height": "adapt",
+        "image_behavior": "none",
+        "desktop_content_position": "middle-center",
+        "desktop_content_alignment": "center",
+        "show_text_box": true,
+        "color_scheme": "",
+        "stack_images_on_mobile": true,
+        "mobile_content_alignment": "center",
+        "show_text_below": true
+      }
+    },
     "featured_collection_kPWtfQ": {
       "type": "featured-collection",
-      "disabled": true,
       "name": "Swimsuit",
       "settings": {
         "collection": "girl-swimsuit",
@@ -465,16 +464,16 @@
   "order": [
     "top_navigation_RKYUxD",
     "image_banner_TpAGQd",
-    "image_banner_Whm4c9",
-    "image_banner_epD4x9",
-    "image_banner",
     "image_banner_bVAktr",
+    "image_banner_epD4x9",
     "image_banner_VWBAiQ",
     "category_navigation_FTCb79",
     "featured_collection_Fn6Xj8",
+    "image_banner",
     "featured_collection_7rLAGB",
-    "image_banner_BCQhzi",
+    "image_banner_Whm4c9",
     "featured_collection_HHAhh7",
+    "image_banner_BCQhzi",
     "featured_collection_kPWtfQ",
     "image_banner_CwjXtz",
     "image_banner_6FkUX3",
