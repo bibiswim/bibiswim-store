@@ -650,7 +650,7 @@ class CartDrawerModern extends HTMLElement {
       if (remaining > 0) {
         textEl.outerHTML = `
           <p class="cart-drawer-modern__shipping-text">
-            Spend <strong>${this.formatMoney(remaining)}</strong> more for FREE shipping!
+            Spend <strong>${this.formatMoney(remaining)}</strong> more for FREE shipping (West Malaysia Only)!
           </p>
         `;
       } else {
